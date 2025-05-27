@@ -93,10 +93,10 @@ In the IAC Driver create two ports with the names:
 - IAC Driver Bus 1
 - IAC Driver Bus 2
 
-Make sure both ports are online 
+Checkmark "Device is online" 
 
-Configuration should look like this:
-<img alt="Configuration should look like this" src="./images/iac-driver-setup.png" height="400"
+Configuration should look like this: <br>
+<img alt="Configuration IAC driver" src="./images/iac-driver-setup.png" height="400"
 />
 
 You are now ready to move to Ableton to set up your preferences there
