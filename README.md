@@ -64,7 +64,7 @@ On some READMEs, you may see small images that convey metadata, such as whether 
 ## Visuals
 Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
 
-## Installation
+## Installation Python libraries
 Make sure you have the [Python](https://www.python.org/downloads/) and [pip](https://pypi.org/project/pip/) installed. 
 
 Create a virtual environment in your desired folder. Run the following in the command line interface (terminal)
@@ -84,7 +84,7 @@ Install the necessary Python libraries
 pip install mido pretty_midi music21
 ```
 
-## Setup Audio_MIDI_Setup
+## Configuration Audio_MIDI_Setup
 On your Macbook go the the Application Audio_MIDI_Setup, this application is a macOS utility that manages and configures audio and MIDI devices on your Mac. It allows you to configure audio input and output devices, set up MIDI devices, and create virtual MIDI connections.
 
 In the Audio MIDI Setup, click on the IAC Driver. The IAC Driver (Inter-Application Driver) is a virtual MIDI device that is installed by default on all Mac OS X installations
@@ -93,16 +93,15 @@ In the IAC Driver create two ports with the names:
 - IAC Driver Bus 1
 - IAC Driver Bus 2
 
-Checkmark "Device is online" 
+Check mark "Device is online" 
 
-Configuration should look like this: <br>
+Configuration should look like this <br>
 <img alt="Configuration IAC driver" src="./images/iac-driver-setup.png" height="400"
 />
 
 You are now ready to move to Ableton to set up your preferences there
 
-## Setup in Ableton
-
+## Configuration Ableton Live 11/12
 
 ## Usage
 Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
