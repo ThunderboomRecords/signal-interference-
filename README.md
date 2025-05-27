@@ -96,7 +96,7 @@ In the IAC Driver create two ports with the names:
 Make sure both ports are online 
 
 Configuration should look like this:
-(https://gitlab.moeilijkedingen.nl/oct/open-culture-tech/images/IAC Driver setup.png)
+https://gitlab.moeilijkedingen.nl/oct/open-culture-tech/images/iac-driver-setup.png
 
 You are now ready to move to Ableton to set up your preferences there
 
