@@ -61,7 +61,7 @@ source markov-midi-env/bin/activate
 
 ```
 cd <your saved cloned repo>
-cd <markov_experiments_oct>
+cd markov_experiments_oct
 ```
 
 We will first make sure the begeleiding (chords) will be played at the exact same timing as your and the Markov AI solo. We will send a MIDI message of C0 to Ableton to make a mapping for this. You only have to do this once! 
