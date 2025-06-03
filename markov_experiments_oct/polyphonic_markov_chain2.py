@@ -98,7 +98,7 @@ def apply_swing(duration):
 
 # ---------------- Markov Chain ---------------- #
 
-def build_markov_chain(sequence, order=3):
+def build_markov_chain(sequence, order=5):
     chain = {}
     for i in range(len(sequence) - order):
         state = tuple(sequence[i:i+order])
@@ -106,7 +106,7 @@ def build_markov_chain(sequence, order=3):
         chain.setdefault(state, []).append(next_item)
     return chain
 
-def generate_from_chain(chain, length, order=1, start_state=None):
+def generate_from_chain(chain, length, order=5, start_state=None):
     if start_state and start_state in chain:
         current = list(start_state)
     else:
@@ -164,7 +164,7 @@ def generate_full_response(primer_path, output_path):
     pm = pretty_midi.PrettyMIDI(primer_path)
     input_data = load_polyphonic_training_data(primer_path, slice_window=0.25)
 
-    markov_order = 3
+    markov_order = 5
     poly_chain = build_markov_chain(training_data, order=markov_order)
 
     if len(input_data) >= markov_order:
