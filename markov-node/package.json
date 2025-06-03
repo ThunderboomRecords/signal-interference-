@@ -1,0 +1,20 @@
+{
+  "name": "markov-node",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "lib": "ES2024",
+  "target": "ES2024",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node ./src/index.mts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.29"
+  },
+  "dependencies": {
+    "@tonejs/midi": "^2.0.28"
+  }
+}
