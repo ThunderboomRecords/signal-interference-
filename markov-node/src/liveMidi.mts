@@ -17,13 +17,57 @@ const TARGET_CLOCKS = CLOCKS_PER_BAR * TARGET_BARS;
 let clockCount = 0;
 let beatTimes: number[] = []; // Array of elapsed times per beat
 let recording: boolean = true;
+let playing: boolean = false;
 let startTime: [number, number] | null = null;
 let noteOnEvents: { [note: number]: number } = {}; // note -> timestamp
 let recordedEvents: NoteEvent[] = [];
 let lastBeatTime: [number, number] | null = null;
+let liveOutputChannel = 1;
+let liveSchedule: ScheduledNote[] = [];
+let liveTickCount = 0;
 // Setup MIDI Input
 const clockInput = new midi.Input(); // also DAW input
 const noteInput = new midi.Input();
+const outputPort = new midi.Output();
+
+function secondsToTicks(seconds: number, bpm: number): number {
+  const ticksPerSecond = (bpm * 24) / 60;
+  return Math.round(seconds * ticksPerSecond);
+}
+type ScheduledNote = {
+  midi: number;
+  startTick: number;
+  endTick: number;
+};
+
+function prepareSchedule(events: NoteEvent[], bpm: number, outputChannel: number): ScheduledNote[] {
+  const schedule: ScheduledNote[] = [];
+  let accumulatedTicks = 0;
+
+  for (const event of events) {
+    const deltaTicks = secondsToTicks(event.deltaTime, bpm);
+    const durationTicks = secondsToTicks(event.duration, bpm);
+
+    accumulatedTicks += deltaTicks;
+
+    schedule.push({
+      midi: event.note,
+      startTick: accumulatedTicks,
+      endTick: accumulatedTicks + durationTicks,
+    });
+  }
+
+  return schedule;
+}
+
+function sendNoteOn(note: number, channel: number) {
+  console.log('note on', channel, note);
+  outputPort.sendMessage([0x90 + channel, note, 100]); // Velocity 100
+}
+
+function sendNoteOff(note: number, channel: number) {
+  outputPort.sendMessage([0x80 + channel, note, 0]);
+}
 
 function calculateBPM(): number | null {
   if (beatTimes.length < 3) {
@@ -60,6 +104,22 @@ clockInput.on('message', (deltaTime, message) => {
         recording = false;
         console.log('Recording finished, generating new MIDI file...');
         generateFromRecording();
+        playing = true;
+      }
+    }
+    if (playing) {
+      // Playback mode
+      liveTickCount++;
+      console.log('live tick count', liveTickCount);
+
+      // Send scheduled note ons
+      for (const note of liveSchedule) {
+        if (note.startTick === liveTickCount) {
+          sendNoteOn(note.midi, liveOutputChannel);
+        }
+        if (note.endTick === liveTickCount) {
+          sendNoteOff(note.midi, liveOutputChannel);
+        }
       }
     }
   } else if (status == 0xFA) {
@@ -149,13 +209,18 @@ async function generateFromRecording() {
 
   const barsToGenerate = 24;
   const generated = chain.generateBarsFuzzy(startSequence, barsToGenerate, bpm);
+  const outputChannel = 1;
+  liveSchedule = prepareSchedule(generated, bpm, outputChannel);
+  liveOutputChannel = outputChannel; // store the channel
+  console.log(liveSchedule);
+  liveTickCount = 0;
 
   const outputFilePath = 'generated_output_live.mid';
   saveMidiFile(generated, outputFilePath).then(() => {
     console.log(`Generated MIDI saved to ${outputFilePath}`);
-    clockInput.closePort();
-    noteInput.closePort();
-    process.exit(0);
+    //clockInput.closePort();
+    //noteInput.closePort();
+    //process.exit(0);
   });
 }
 
@@ -186,8 +251,14 @@ function selectMidiInputs() {
     console.error('invalid MIDI note input port. Exiting');
     process.exit(1);
   }
+  const notePortOutput = prompt('Select MIDI Notes output port: ');
+  if (!notePortOutput) {
+    console.error('invalid MIDI note output port. Exiting');
+    process.exit(1);
+  }
   const clockPort = parseInt(clockPortInput);
   const notePort = parseInt(notePortInput);
+  const noteOutPort = parseInt(notePortOutput);
 
   if (isNaN(clockPort) || clockPort < 0 || clockPort >= ports.length) {
     console.error('Invalid Clock input port.');
@@ -198,9 +269,14 @@ function selectMidiInputs() {
     console.error('Invalid Note input port.');
     process.exit(1);
   }
+  if (isNaN(noteOutPort) || noteOutPort < 0 || noteOutPort >= ports.length) {
+    console.error('Invalid Note input port.');
+    process.exit(1);
+  }
 
   clockInput.openPort(clockPort);
   noteInput.openPort(notePort);
+  outputPort.openPort(noteOutPort);
 
   clockInput.ignoreTypes(false, false, false);
   noteInput.ignoreTypes(false, false, false);
