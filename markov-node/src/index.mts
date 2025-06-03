@@ -5,7 +5,7 @@ import * as fs from 'fs';
 type NoteEvent = { note: number; deltaTime: number; duration: number };
 
 class HigherOrderMarkovChain<T> {
-  transitions: Map<string, T[]> = new Map();
+  transitions: Map<string, Map<string, number>> = new Map(); // Key -> (Next -> Count)
   order: number;
 
   constructor(order: number) {
@@ -19,12 +19,14 @@ class HigherOrderMarkovChain<T> {
 
     for (let i = 0; i <= sequence.length - this.order - 1; i++) {
       const key = JSON.stringify(sequence.slice(i, i + this.order));
-      const next = sequence[i + this.order];
+      const next = JSON.stringify(sequence[i + this.order]);
 
       if (!this.transitions.has(key)) {
-        this.transitions.set(key, []);
+        this.transitions.set(key, new Map());
       }
-      this.transitions.get(key)!.push(next);
+
+      const nextMap = this.transitions.get(key)!;
+      nextMap.set(next, (nextMap.get(next) || 0) + 1);
     }
   }
 
@@ -40,18 +42,35 @@ class HigherOrderMarkovChain<T> {
       const key = JSON.stringify(current);
       const possibleNext = this.transitions.get(key);
 
-      if (!possibleNext || possibleNext.length === 0) {
+      if (!possibleNext || possibleNext.size === 0) {
         break;
       }
 
-      const next = possibleNext[Math.floor(Math.random() * possibleNext.length)];
+      const nextStr = this.weightedRandomChoice(possibleNext);
+      const next = JSON.parse(nextStr) as T;
       result.push(next);
 
-      // Move the window forward
+      // Slide the window
       current = [...current.slice(1), next];
     }
 
     return result;
+  }
+
+  private weightedRandomChoice(counts: Map<string, number>): string {
+    const entries = Array.from(counts.entries());
+    const totalWeight = entries.reduce((sum, [, count]) => sum + count, 0);
+
+    let rand = Math.random() * totalWeight;
+    for (const [item, weight] of entries) {
+      if (rand < weight) {
+        return item;
+      }
+      rand -= weight;
+    }
+
+    // Fallback
+    return entries[entries.length - 1][0];
   }
 }
 
@@ -111,7 +130,7 @@ async function run() {
   const generated = chain.generate(startSequence, 50); // Generate 50 notes
   console.log('Generated Sequence:', generated);
 
-  await saveMidiFile(generated, 'dist/output.mid');
+  await saveMidiFile(generated, 'dist/output-weighed.mid');
   console.log('MIDI file saved!');
 }
 
