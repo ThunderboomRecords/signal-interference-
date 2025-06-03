@@ -1,0 +1,5 @@
+mido
+pretty_midi
+music21
+setuptools
+python-rtmidi

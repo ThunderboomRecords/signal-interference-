@@ -55,6 +55,7 @@ def record_midi(filename, trigger_chords=False):
         for msg in in_port.iter_pending():
             now = time.time()
             elapsed = now - last_event_time
+            # TODO: check what the actual tempo is.
             ticks = mido.second2tick(elapsed, 480, 500000)
             msg.time = int(round(ticks))
             track.append(msg)
