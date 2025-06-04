@@ -112,6 +112,8 @@ class HigherOrderMarkovChain<T> {
       throw new Error(`Start sequence must have exactly ${this.order} elements`);
     }
 
+    const startTimeSum = start.reduce((sum, e: any) => sum + (e.deltaTime || 0), 0);
+    const startLength = start.length;
     const secondsPerBeat = 60 / bpm;
     const secondsPerBar = secondsPerBeat * beatsPerBar;
     const totalTargetTime = secondsPerBar * bars;
@@ -120,7 +122,8 @@ class HigherOrderMarkovChain<T> {
     let current = [...start];
     let currentTimeSum = start.reduce((sum, e: any) => sum + (e.deltaTime || 0), 0);
 
-    while (currentTimeSum < totalTargetTime) {
+
+    while (currentTimeSum - startTimeSum <= totalTargetTime) {
       let next: T | undefined = undefined;
 
       // Try exact matching first
@@ -141,6 +144,8 @@ class HigherOrderMarkovChain<T> {
         let bestMatch: T[] | null = null;
         let bestDistance = Infinity;
 
+        // TODO: double check this it ends up using a lot of the same phrases for best distance. Should recude this somewhat.
+        // TODO: also use the order reduction.
         for (const candidate of allKeys) {
           if (candidate.length !== current.length) continue; // Match only same order
           const dist = sequenceDistance(candidate, current);
@@ -169,8 +174,7 @@ class HigherOrderMarkovChain<T> {
       currentTimeSum += (next as any).deltaTime || 0;
       current = [...current.slice(1), next];
     }
-
-    return result;
+    return result.slice(startLength);
   }
 
   private weightedRandomChoice(counts: Map<string, number>): string {

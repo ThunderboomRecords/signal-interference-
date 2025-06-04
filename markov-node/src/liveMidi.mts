@@ -16,7 +16,7 @@ const TARGET_CLOCKS = CLOCKS_PER_BAR * TARGET_BARS;
 // State for Recording
 let clockCount = 0;
 let beatTimes: number[] = []; // Array of elapsed times per beat
-let recording: boolean = true;
+let recording: boolean = false;
 let playing: boolean = false;
 let startTime: [number, number] | null = null;
 let noteOnEvents: { [note: number]: number } = {}; // note -> timestamp
@@ -61,7 +61,6 @@ function prepareSchedule(events: NoteEvent[], bpm: number, outputChannel: number
 }
 
 function sendNoteOn(note: number, channel: number) {
-  console.log('note on', channel, note);
   outputPort.sendMessage([0x90 + channel, note, 100]); // Velocity 100
 }
 
@@ -104,14 +103,20 @@ clockInput.on('message', (deltaTime, message) => {
         recording = false;
         console.log('Recording finished, generating new MIDI file...');
         generateFromRecording();
-        playing = true;
       }
     }
     if (playing) {
       // Playback mode
       liveTickCount++;
-      console.log('live tick count', liveTickCount);
-
+      const lastNote = liveSchedule.reduce((previousValue, currentValue) => {
+        if (currentValue.endTick >= previousValue) {
+          return currentValue.endTick;
+        }
+        return previousValue;
+      }, 0);
+      if (liveTickCount > lastNote) {
+        playing = false;
+      }
       // Send scheduled note ons
       for (const note of liveSchedule) {
         if (note.startTick === liveTickCount) {
@@ -121,6 +126,8 @@ clockInput.on('message', (deltaTime, message) => {
           sendNoteOff(note.midi, liveOutputChannel);
         }
       }
+
+
     }
   } else if (status == 0xFA) {
     console.log('\nStart received: starting recording...');
@@ -177,15 +184,12 @@ noteInput.on('message', (deltaTime, message) => {
 function startRecording() {
   // Reset everything
   clockCount = 0;
-  beatTimes = [];
-  lastBeatTime = null;
   startTime = null;
   noteOnEvents = {};
   recordedEvents = [];
   recording = true;
 }
 
-console.log('Waiting for MIDI clock and Start message... 🎶');
 
 async function generateFromRecording() {
   if (recordedEvents.length < 10) {
@@ -214,6 +218,7 @@ async function generateFromRecording() {
   liveOutputChannel = outputChannel; // store the channel
   console.log(liveSchedule);
   liveTickCount = 0;
+  playing = true;
 
   const outputFilePath = 'generated_output_live.mid';
   saveMidiFile(generated, outputFilePath).then(() => {
@@ -280,12 +285,76 @@ function selectMidiInputs() {
 
   clockInput.ignoreTypes(false, false, false);
   noteInput.ignoreTypes(false, false, false);
+
+  console.log('Waiting for MIDI clock Start message... 🎶');
 }
+
+
+function waitForRecordingToBeFinished(): Promise<void> {
+  return new Promise((resolve) => {
+    const waitToComplete = () => {
+      setTimeout(() => {
+        if (!recording) {
+          resolve();
+        } else {
+          waitToComplete();
+        }
+      }, 10);
+    }
+
+    waitToComplete();
+  })
+}
+
+function waitForPlaybackToStart(): Promise<void> {
+  return new Promise((resolve) => {
+    const waitToComplete = () => {
+      setTimeout(() => {
+        if (playing) {
+          resolve();
+        } else {
+          waitToComplete();
+        }
+      }, 10);
+    }
+    waitToComplete();
+  })
+}
+
+function waitForPlaybackToBeFinished(): Promise<void> {
+  return new Promise((resolve) => {
+    const waitToComplete = () => {
+      setTimeout(() => {
+        if (!playing) {
+          resolve();
+        } else {
+          waitToComplete();
+        }
+      }, 10);
+    }
+    waitToComplete();
+  })
+}
+
+async function recordPlaybackLoop() {
+  if (!recording && !playing) {
+    prompt('Press enter to start recording');
+    startRecording();
+  }
+  await waitForRecordingToBeFinished();
+  console.log('Finished Recording');
+  console.log('Starting Playback');
+  await waitForPlaybackToStart();
+  await waitForPlaybackToBeFinished();
+  recordPlaybackLoop();
+}
+
 
 // MAIN
 function main() {
   selectMidiInputs();
-  console.log('Waiting for MIDI clock Start message... 🎶');
+
+  recordPlaybackLoop();
 }
 
 main();
