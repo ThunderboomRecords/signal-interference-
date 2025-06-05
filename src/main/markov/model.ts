@@ -1,3 +1,4 @@
+import type { NoteEvent } from "../types";
 export function sequenceDistance<T extends NoteEvent>(a: T[], b: T[]): number {
   let distance = 0;
   for (let i = 0; i < a.length; i++) {

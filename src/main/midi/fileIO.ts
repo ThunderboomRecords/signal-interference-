@@ -1,7 +1,7 @@
 import ToneJS from '@tonejs/midi';
 const { Midi } = ToneJS;
 import * as fs from 'fs';
-import type { NoteEvent } from './types.mts';
+import type { NoteEvent } from './types';
 
 
 export async function parseMidiFile(filePath: string): Promise<NoteEvent[]> {
@@ -9,7 +9,7 @@ export async function parseMidiFile(filePath: string): Promise<NoteEvent[]> {
   const midi = new Midi(input);
 
   const notes = midi.tracks[0].notes;
-  let events: NoteEvent[] = [];
+  const events: NoteEvent[] = [];
 
   for (let i = 0; i < notes.length; i++) {
     const note = notes[i];
@@ -45,3 +45,4 @@ export async function saveMidiFile(events: NoteEvent[], filePath: string) {
   const output = midi.toArray();
   fs.writeFileSync(filePath, Buffer.from(output));
 }
+
