@@ -30,7 +30,7 @@ interface ScheduledNote {
   startTick: number,
   endTick: number,
 }
-class Sequencer {
+export default class Sequencer {
   // inputs
   clockInput: Midi.Input;
   recordingInput: Midi.Input;

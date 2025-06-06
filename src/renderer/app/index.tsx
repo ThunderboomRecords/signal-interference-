@@ -1,9 +1,13 @@
 import { createRoot } from "react-dom/client";
+import GeneralControls from "../generalControls";
 export default function App() {
   return (
-    <h1>
-      Open Culture Tech Hammond AI
-    </h1>
+    <>
+      <h1>
+        Open Culture Tech Hammond AI
+      </h1>
+      <GeneralControls />
+    </>
   );
 }
 
