@@ -1,3 +1,4 @@
+import { CLOCKS_PER_BEAT } from "../constants";
 import type { NoteEvent } from "../types";
 export function sequenceDistance<T extends NoteEvent>(a: T[], b: T[]): number {
   let distance = 0;
@@ -12,7 +13,10 @@ class HigherOrderMarkovChain<T> {
   transitions: Map<string, Map<string, number>> = new Map(); // Key -> (Next -> Count)
   order: number;
 
-  constructor(order: number) {
+  constructor(order?: number) {
+    this.order = order;
+  }
+  setOrder(order: number) {
     this.order = order;
   }
 
@@ -108,20 +112,25 @@ class HigherOrderMarkovChain<T> {
 
     return result;
   }
-  generateBarsFuzzy(start: T[], bars: number, bpm: number, beatsPerBar = 4): T[] {
+  generateBarsFuzzy(start: T[], bars: number, beatsPerBar = 4): T[] {
+
     if (start.length !== this.order) {
       throw new Error(`Start sequence must have exactly ${this.order} elements`);
     }
 
     const startTimeSum = start.reduce((sum, e: any) => sum + (e.deltaTime || 0), 0);
     const startLength = start.length;
-    const secondsPerBeat = 60 / bpm;
-    const secondsPerBar = secondsPerBeat * beatsPerBar;
-    const totalTargetTime = secondsPerBar * bars;
+    const totalTargetTime = bars * beatsPerBar * CLOCKS_PER_BEAT;
+
 
     const result: T[] = [...start];
     let current = [...start];
     let currentTimeSum = start.reduce((sum, e: any) => sum + (e.deltaTime || 0), 0);
+    console.log({
+      startTimeSum,
+      startLength,
+      totalTargetTime,
+    });
 
 
     while (currentTimeSum - startTimeSum <= totalTargetTime) {

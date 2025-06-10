@@ -2,6 +2,7 @@ import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import initCommands from './commands';
+import * as mainApp from './app';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -28,6 +29,11 @@ const createWindow = () => {
   initCommands();
   // Open theDevTools.
   mainWindow.webContents.openDevTools();
+
+  mainApp.init();
+  mainWindow.on('ready-to-show', () => {
+    mainApp.loadSettings(mainWindow);
+  });
 };
 
 // This method will be called when Electron has finished

@@ -14,16 +14,40 @@ export class MidiIO {
     this.noteInput.closePort();
     this.outputPort.closePort();
   }
-  setClockPort(clockId: number) {
+  setClockPort(clockId: number | string) {
     this.clockInput.closePort();
+    if (typeof clockId === 'string') {
+      clockId = getMidiPortNumberByName(clockId, 'input');
+    }
+    if (clockId < 0) {
+      // disables port
+      return;
+    }
     this.clockInput.openPort(clockId);
+    this.clockInput.ignoreTypes(false, false, false);
   }
-  setInputPort(inputId: number) {
+
+  setInputPort(inputId: number | string) {
     this.noteInput.closePort();
+    if (typeof inputId === 'string') {
+      inputId = getMidiPortNumberByName(inputId, 'input');
+    }
+    if (inputId < 0) {
+      // disables port
+      return;
+    }
     this.noteInput.openPort(inputId);
+    this.noteInput.ignoreTypes(false, false, false);
   }
-  setOutputPort(outputId: number) {
+  setOutputPort(outputId: number | string) {
     this.outputPort.closePort();
+    if (typeof outputId === 'string') {
+      outputId = getMidiPortNumberByName(outputId, 'output');
+    }
+    if (outputId < 0) {
+      // disables port
+      return;
+    }
     this.outputPort.openPort(outputId);
   }
 
@@ -38,7 +62,6 @@ export class MidiIO {
   }
 }
 
-export const midiPorts = new MidiIO();
 
 function getMidiPorts(io: midi.Input | midi.Output) {
   const count = io.getPortCount();
@@ -61,3 +84,15 @@ export function getMidiIOPorts() {
   };
 }
 
+export function getMidiPortNumberByName(name: string, portType: 'input' | 'output') {
+  const ports = getMidiIOPorts();
+  if (portType === 'input') {
+    const ind = ports.input.findIndex((port) => port === name);
+    return ind;
+  }
+  const ind = ports.output.findIndex((port) => port === name);
+  return ind;
+}
+
+
+export const midiPorts = new MidiIO();
