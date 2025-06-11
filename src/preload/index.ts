@@ -6,7 +6,7 @@ import { MidiInterfaceInfo } from '../main/types';
 
 type MidiInterfaceCallback = (info: MidiInterfaceInfo) => void;
 
-contextBridge.exposeInMainWorld('electronApi', {
+const ipcApi = {
   // set
   setClock: (midiClockId: number) => ipcRenderer.send('midi:setClock', midiClockId),
   setInputChannel: (midiInput: number) => ipcRenderer.send('midi:setInput', midiInput),
@@ -24,7 +24,9 @@ contextBridge.exposeInMainWorld('electronApi', {
   onMidiOutput: (callback: MidiInterfaceCallback) => {
     ipcRenderer.on('midi:currentMidiOutput', (_event, value) => { callback(value); });
   },
-});
+}
+
+contextBridge.exposeInMainWorld('electronApi', ipcApi);
 
 
-
+export type ElectonAPI = typeof ipcApi;

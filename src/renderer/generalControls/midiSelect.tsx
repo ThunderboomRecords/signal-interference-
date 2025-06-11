@@ -13,16 +13,15 @@ function MidiSelector(props: {
   inputList: string[];
   selectCallback: (id: string) => void;
   updateContent: () => void;
-  currentInput?: MidiInterfaceInfo;
+  currentInput?: string;
 }) {
   const { inputList, selectCallback, updateContent, currentInput } = props;
 
-  const value = (currentInput !== undefined && currentInput.name !== '') ? currentInput.name : undefined;
-  console.log({ value });
+  const value = (currentInput !== undefined && currentInput !== '') ? currentInput : undefined;
   return (
     <div className="select-wrapper">
       <Select
-        value={(currentInput !== undefined && currentInput.name !== '') && currentInput.name}
+        value={(currentInput !== undefined && currentInput !== '') && currentInput}
         onOpenChange={() => { updateContent(); }}
         onValueChange={(value: string) => { selectCallback(value) }}>
         <SelectTrigger className="w-[180px]" >
@@ -32,7 +31,7 @@ function MidiSelector(props: {
           {
             inputList.map((inputName: string, index: number) => {
               return (
-                <SelectItem value={inputName}>{inputName}</SelectItem>
+                <SelectItem key={inputName} value={inputName}>{inputName}</SelectItem>
               )
             })
           }
@@ -47,7 +46,7 @@ function SingleSelector(props: {
   labelName: string;
   selectCallback: (id: string) => void;
   updateContent: () => void;
-  currentInput?: MidiInterfaceInfo;
+  currentInput?: string;
 }) {
   const { inputList, labelName, selectCallback, updateContent, currentInput } = props;
   return (
@@ -70,29 +69,27 @@ function SingleSelector(props: {
 // TODO: Add history for this so it remembers the configuration and default io config
 export default function MidiSelect() {
   const [midiIO, setMidiIO] = useState<{ input: string[], output: string[] }>({ input: [], output: [] });
-  const [currentClockInput, setClockInput] = useState<MidiInterfaceInfo | undefined>(undefined);
-  const [currentMidiInput, setMidiInput] = useState<MidiInterfaceInfo | undefined>(undefined);
-  const [currentMidiOutput, setMidiOutput] = useState<MidiInterfaceInfo | undefined>(undefined);
+  const [currentClockInput, setClockInput] = useState<string | undefined>(undefined);
+  const [currentMidiInput, setMidiInput] = useState<string | undefined>(undefined);
+  const [currentMidiOutput, setMidiOutput] = useState<string | undefined>(undefined);
 
 
 
   const getContents = async () => {
-    console.log(window.electronApi);
     const inputs = await window.electronApi.getMidiInputs();
     setMidiIO(inputs);
-    console.log(inputs);
   }
 
   useEffect(() => {
     getContents();
     window.electronApi.onMidiInput((value: MidiInterfaceInfo) => {
-      setMidiInput(value);
+      setMidiInput(value.name);
     });
     window.electronApi.onMidiOutput((value: MidiInterfaceInfo) => {
-      setMidiOutput(value);
+      setMidiOutput(value.name);
     });
     window.electronApi.onMidiClock((value: MidiInterfaceInfo) => {
-      setClockInput(value);
+      setClockInput(value.name);
     });
   }, []);
 
@@ -104,8 +101,9 @@ export default function MidiSelect() {
         labelName="Clock"
         updateContent={getContents}
         selectCallback={(id) => {
-          console.log('clock selected', id);
-          window.electronApi.updateSetting('clockInput', id);
+          window.electronApi.updateSetting('clockInput', id).then((e) => {
+            setClockInput(e.clockInput);
+          });
         }}
       />
 
@@ -115,9 +113,9 @@ export default function MidiSelect() {
         labelName="Input"
         updateContent={getContents}
         selectCallback={(id) => {
-          console.log('input selected', id);
-          window.electronApi.setInputChannel(id);
-          window.electronApi.updateSetting('midiInput', id);
+          window.electronApi.updateSetting('midiInput', id).then((e) => {
+            setMidiInput(e.midiInput);
+          });
         }}
       />
 
@@ -127,9 +125,9 @@ export default function MidiSelect() {
         labelName="Output"
         updateContent={getContents}
         selectCallback={(id) => {
-          console.log('output selected', id);
-          window.electronApi.setOutputChannel(id);
-          window.electronApi.updateSetting('midiOutput', id);
+          window.electronApi.updateSetting('midiOutput', id).then((e) => {
+            setMidiOutput(e.midiOutput);
+          });
 
         }}
       />
