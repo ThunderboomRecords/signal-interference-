@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import GeneralControls from "../generalControls";
+import Songs from "../songs";
 export default function App() {
   return (
     <>
@@ -7,6 +8,7 @@ export default function App() {
         Open Culture Tech Hammond AI
       </h1>
       <GeneralControls />
+      <Songs />
     </>
   );
 }
