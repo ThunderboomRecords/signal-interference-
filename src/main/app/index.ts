@@ -17,7 +17,7 @@ const sequencer = new Sequencer(midiPorts.getClockPort(), midiPorts.getInputPort
 
 let recordedNotes: NoteEvent[] = [];
 let generativeInput: NoteEvent[] = [];
-let currentModel: HigherOrderMarkovChain<NoteEvent> = new HigherOrderMarkovChain<NoteEvent>(DEFAULT_MAX_ORDER);
+const currentModel: HigherOrderMarkovChain<NoteEvent> = new HigherOrderMarkovChain<NoteEvent>(DEFAULT_MAX_ORDER);
 let defaultInput: NoteEvent[] = [];
 
 parseMidiFile(path.join(__dirname, '../../assets/trainings_midi/solo.mid')).then((notes) => {
@@ -26,7 +26,6 @@ parseMidiFile(path.join(__dirname, '../../assets/trainings_midi/solo.mid')).then
   defaultInput = [...notes];
   console.log({ defaultInput });
 });
-
 
 export function stopRecording() {
   sequencer.stopRecording();
@@ -47,11 +46,9 @@ export function stopPlayback() {
   sequencer.stopPlayback();
 }
 
-
-
 export function generate(bars: number) {
   //const maxOrder = getNotesPerBar(generativeInput, sequencer.beatsPerBar).reduce((max: number, e: number) => (e > max ? e : max), 0);
-  let maxOrder = DEFAULT_MAX_ORDER;
+  const maxOrder = DEFAULT_MAX_ORDER;
 
   let startSequence: NoteEvent[] = [];
   if (generativeInput && generativeInput.length > 0) {
