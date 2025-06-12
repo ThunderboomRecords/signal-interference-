@@ -5,12 +5,16 @@ import { parseMidiFile, saveMidiFile } from './midiFileIO.mts';
 import promptSync from 'prompt-sync';
 
 const prompt = promptSync();
+const BARS_TO_GENERATE = 8;
+const MARKOV_ORDER = 12;
 
 // MIDI Clock Constants
+const TRAININGS_MIDI_FILE = 'assets/midi/day-is-done-trainings.mid';
+const BPM = 130;
 const CLOCKS_PER_BEAT = 24; // MIDI clock sends 24 pulses per quarter note
 const BEATS_PER_BAR = 4;
 const CLOCKS_PER_BAR = CLOCKS_PER_BEAT * BEATS_PER_BAR;
-const TARGET_BARS = 12;
+const TARGET_BARS = 8;
 const TARGET_CLOCKS = CLOCKS_PER_BAR * TARGET_BARS;
 
 // State for Recording
@@ -75,24 +79,35 @@ function calculateBPM(): number | null {
   const avgBeatTime = beatTimes.reduce((sum, t) => sum + t, 0) / beatTimes.length;
   return 60 / avgBeatTime;
 }
-
+let globalClockInput = 0;
+let globalBPM = 0;
+function updateGlobalBPM() {
+  globalClockInput++;
+  if (globalClockInput % 24 === 0) { // Every beat (24 clocks)
+    const now = process.hrtime();
+  console.log(".");
+    if (lastBeatTime) {
+      const elapsed = (now[0] - lastBeatTime[0]) + (now[1] - lastBeatTime[1]) / 1e9;
+      beatTimes.push(elapsed);
+      if (beatTimes.length > 10) {
+        beatTimes.shift(); // Keep last 10 beat durations
+      }
+    }
+    lastBeatTime = now;
+}
+}
 clockInput.on('message', (deltaTime, message) => {
   const [status, data1, data2] = message;
 
   if (status === 0xF8) {
     // MIDI Clock Tick
+    updateGlobalBPM();
     if (recording) {
+      if(clockCount === 0) {
+        console.log("receiving midi clock");
+      }
       clockCount++;
-      if (clockCount % 24 === 0) { // Every beat (24 clocks)
-        const now = process.hrtime();
-        if (lastBeatTime) {
-          const elapsed = (now[0] - lastBeatTime[0]) + (now[1] - lastBeatTime[1]) / 1e9;
-          beatTimes.push(elapsed);
-          if (beatTimes.length > 10) {
-            beatTimes.shift(); // Keep last 10 beat durations
-          }
-        }
-        lastBeatTime = now;
+      if (clockCount % 24 === 0){
         const bpm = calculateBPM();
         if (bpm) {
           process.stdout.write(`\rCurrent BPM: ${bpm.toFixed(2)}   `); // overwrite line
@@ -158,6 +173,9 @@ noteInput.on('message', (deltaTime, message) => {
   } else if ((status >= 0x80 && status < 0x90) || (status >= 0x90 && data2 === 0)) {
     // Note Off
     if (recording) {
+      if (!startTime) {
+        startTime = process.hrtime(); // High resolution time
+      }
       const currentTime = process.hrtime(startTime!);
       const timestamp = currentTime[0] + currentTime[1] / 1e9;
 
@@ -192,26 +210,31 @@ function startRecording() {
 
 
 async function generateFromRecording() {
-  if (recordedEvents.length < 10) {
+  if (recordedEvents.length < 4) {
     console.error('Not enough events recorded.');
     process.exit(1);
   }
-  const bpm = calculateBPM();
-  if (!bpm) {
-    console.error('Not enough BPM data.');
-    process.exit(1);
-  }
+  const highestPossibleOrder = recordedEvents.length;
+  const currentOrder = highestPossibleOrder > MARKOV_ORDER ? MARKOV_ORDER : highestPossibleOrder;
+  console.log(`generating with order: ${currentOrder}`);
+  // const bpm = calculateBPM();
+
+  // if (!bpm) {
+  //   console.error('Not enough BPM data.');
+  //   process.exit(1);
+  // }
+  const bpm = BPM;
   console.log(`Detected BPM: ${bpm.toFixed(2)}`);
 
-  const order = 12;
-  const notes = await parseMidiFile('assets/midi/solo.mid');
+  const order = currentOrder;
+  const notes = await parseMidiFile(TRAININGS_MIDI_FILE);
   console.log('Parsed Notes:', notes);
   const chain = new HigherOrderMarkovChain<NoteEvent>(order);
   chain.addSequence(notes);
 
-  const startSequence = recordedEvents.slice(recordedEvents.length - order, recordedEvents.length);
+  const startSequence = recordedEvents.slice(recordedEvents.length - currentOrder, recordedEvents.length);
 
-  const barsToGenerate = 24;
+  const barsToGenerate = BARS_TO_GENERATE;
   const generated = chain.generateBarsFuzzy(startSequence, barsToGenerate, bpm);
   const outputChannel = 1;
   liveSchedule = prepareSchedule(generated, bpm, outputChannel);
@@ -349,12 +372,28 @@ async function recordPlaybackLoop() {
   recordPlaybackLoop();
 }
 
+async function recordPlaybackLoopContinious() {
+  prompt('Press Enter to start the record-playback loop...');
+
+  while (true) {
+    console.log('🎙️ Starting Recording...');
+    startRecording(); // begin recording without waiting for MIDI Start
+    await waitForRecordingToBeFinished();
+    console.log('✅ Finished Recording');
+
+    console.log('🎵 Starting Playback...');
+    await waitForPlaybackToStart();
+    await waitForPlaybackToBeFinished();
+    console.log('✅ Playback Finished');
+  }
+}
+
 
 // MAIN
 function main() {
   selectMidiInputs();
-
-  recordPlaybackLoop();
+  recordPlaybackLoopContinious();
+  //recordPlaybackLoop();
 }
 
 main();
