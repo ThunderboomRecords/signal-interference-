@@ -5,7 +5,8 @@ import type { NoteEvent } from './types.mts';
 import './liveMidi.mts';
 
 async function run() {
-  const notes = await parseMidiFile('assets/midi/solo.mid');
+  //const notes = await parseMidiFile('assets/midi/solo.mid');
+  const notes = await parseMidiFile('assets/midi/day-is-done-trainings.mid');
   console.log('Parsed Notes:', notes);
 
   const order = 12; // Higher-order chain
