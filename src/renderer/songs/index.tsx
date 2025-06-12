@@ -1,9 +1,18 @@
 import { Button } from '@/components/ui/button';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Song from './song';
 import './index.css';
+import { GenerationStemData, TrainingData } from 'src/main/types';
 
+const initSong = {
+  name: '',
+  trainingData: [] as TrainingData[],
+  beatsPerBar: 4,
+  stemData: [] as GenerationStemData[],
+  midiSelection: { cc: 56, value: 0, },
+}
 export default function Songs() {
+  const [song, setSong] = useState(initSong);
 
   useEffect(() => {
     // get songs
@@ -18,14 +27,8 @@ export default function Songs() {
         <span>Midi Selectie Command</span>
       </div>
       <div id='songs-container'>
-        <Song selected song={{
-          name: '',
-          trainingData: [],
-          stemData: [],
-          beatsPerBar: 4,
-        }} />
+        <Song selected song={song} onChange={(e) => { setSong(e); console.log('changed song', e) }} />
       </div>
-
       <Button id='addSongButton'>+ Add Song</Button>
     </div >
   )

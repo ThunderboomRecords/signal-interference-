@@ -21,10 +21,8 @@ const currentModel: HigherOrderMarkovChain<NoteEvent> = new HigherOrderMarkovCha
 let defaultInput: NoteEvent[] = [];
 
 parseMidiFile(path.join(__dirname, '../../assets/trainings_midi/solo.mid')).then((notes) => {
-  console.log({ notes });
   currentModel.addSequence([...notes]);
   defaultInput = [...notes];
-  console.log({ defaultInput });
 });
 
 export function stopRecording() {
@@ -81,6 +79,7 @@ function registerCallbacks() {
   // 48: Start playback
   // 49: Stop playback
   // 56: Song switching // TODO
+  // FIXME: Panic or kill button
   sequencer.setCCCallback(16, (_cc, data) => { sequencer.setBeatsPerBar(data) });
   sequencer.setCCCallback(32, (_cc, data) => { startRecording(data); });
   sequencer.setCCCallback(33, (_cc, _data) => { stopRecording(); });

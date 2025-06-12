@@ -1,6 +1,12 @@
 import { createRoot } from "react-dom/client";
 import GeneralControls from "../generalControls";
 import Songs from "../songs";
+/*
+ * TODO: 
+ *  - Midi IO indicators
+ *  - Generate & play, & recording buttons
+ */
+
 export default function App() {
   return (
     <>

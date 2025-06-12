@@ -8,20 +8,23 @@ import * as path from 'path';
 import fs from 'fs/promises';
 import { FileEdit } from 'lucide-react';
 
-class Song implements SongI {
+export class Song implements SongI {
+  name: string;
   trainingData: TrainingData[];
   beatsPerBar: number;
   history?: NoteHistory[];
   stemData: GenerationStemData[];
+  midiSelection: { cc: number; value: number; };
   constructor(beatsPerBar = DEFAULT_BEAT_PER_BAR) {
     this.trainingData = [];
     this.beatsPerBar = beatsPerBar;
     this.history = [];
     this.stemData = [];
+    this.midiSelection.cc = 56;
   }
 
 }
-class Project implements ProjectI {
+export class Project implements ProjectI {
   songs: SongI[];
   lastSavePath?: string;
   constructor() {

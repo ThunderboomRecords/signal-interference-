@@ -7,6 +7,7 @@ import { MidiInterfaceInfo } from '../main/types';
 type MidiInterfaceCallback = (info: MidiInterfaceInfo) => void;
 
 const ipcApi = {
+
   // set
   setClock: (midiClockId: number) => ipcRenderer.send('midi:setClock', midiClockId),
   setInputChannel: (midiInput: number) => ipcRenderer.send('midi:setInput', midiInput),
@@ -14,6 +15,7 @@ const ipcApi = {
   // invoking
   getMidiInputs: () => ipcRenderer.invoke('midi:getPorts'),
   updateSetting: (key: string, value: string) => { return ipcRenderer.invoke('setting:update', key, value); },
+  openFileDialog: () => ipcRenderer.invoke('dialog:openFile'),
   // receiving
   onMidiClock: (callback: MidiInterfaceCallback) => {
     ipcRenderer.on('midi:currentClockInput', (_event, value) => { callback(value); });
@@ -24,6 +26,7 @@ const ipcApi = {
   onMidiOutput: (callback: MidiInterfaceCallback) => {
     ipcRenderer.on('midi:currentMidiOutput', (_event, value) => { callback(value); });
   },
+
 }
 
 contextBridge.exposeInMainWorld('electronApi', ipcApi);

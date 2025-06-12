@@ -31,7 +31,7 @@ export interface Song {
   stemData: GenerationStemData[];
   beatsPerBar: number;
   history?: NoteHistory[];
-  midiSelection?: {
+  midiSelection: {
     cc: number;
     value: number;
   }
