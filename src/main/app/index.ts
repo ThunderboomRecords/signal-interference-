@@ -189,6 +189,7 @@ const updateSettingFunctions: Record<keyof ApplicationSettings, (value: string) 
   midiInput: setRecordingInput,
   midiOutput: setMidiOutput,
 }
+
 export async function updateSetting(key: keyof ApplicationSettings, value: string) {
   const settings = await loadSettingsFromDisk();
   const newSettings = { ...settings };

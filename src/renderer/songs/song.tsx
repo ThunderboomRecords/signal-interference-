@@ -12,7 +12,7 @@ function FileUpload(props: {
   const { trainingFiles, onFileSelect } = props;
   const hasTrainingFiles = trainingFiles?.length > 0;
   return (
-    <span>
+    <span className="file-button">
       <Button
         onClick={(e) => {
           e.preventDefault();
@@ -64,26 +64,80 @@ export default function SongBar(props: {
   const trainingFileNames = song.trainingData.map((fileName) => fileName.name.split(/[\\/]/).slice(-1)[0]);
 
   return (
-    <div onClick={() => { onSelect(song) }} className={`song-container ${selected && 'selected'}`}>
-      <Input onInput={(e) => {
-        console.log(e.target.value);
-        const newSongInfo = { ...song };
-        newSongInfo.name = e.target.value;
-        onChange(newSongInfo);
-      }}
-        type='text'
-        placeholder="Naam"
-        defaultValue={song.name}
-      />
-      <FileUpload trainingFiles={trainingFileNames} onFileSelect={(files) => {
-        const newSongInfo = { ...song };
-        newSongInfo.trainingData = files;
-        onChange(newSongInfo);
-      }} />
-      <Input type='number' placeholder="Markov Order" defaultValue={12} />
-      <Input type='number' placeholder="Bars to generate" defaultValue={12} />
-      <Input type='number' placeholder="Song selection" />
-      <DeleteButton onClick={() => { console.log('should delete') }} />
-    </div>
+    <tr onClick={() => { onSelect(song) }} className={`song-container ${selected && 'selected'}`}>
+      <td>
+        <Input onInput={(e) => {
+          console.log(e.target.value);
+          const newSongInfo = { ...song };
+          newSongInfo.name = e.target.value;
+          onChange(newSongInfo);
+        }}
+          type='text'
+          placeholder="Naam"
+          defaultValue={song.name}
+        />
+      </td>
+      <td>
+        <FileUpload trainingFiles={trainingFileNames} onFileSelect={(files) => {
+          const newSongInfo = { ...song };
+          newSongInfo.trainingData = files;
+          onChange(newSongInfo);
+        }} />
+      </td>
+      <td>
+        <Input min="1" max="1000" type='number' placeholder="Markov Order" defaultValue={12}
+          onChange={(e) => {
+            console.log(e.target.value);
+            const newSongInfo = { ...song };
+            newSongInfo.generationOptions.order = parseInt(e.target.value);
+            if (typeof newSongInfo.generationOptions.order !== 'number' || isNaN(newSongInfo.generationOptions.order)) {
+              return;
+            }
+            onChange(newSongInfo);
+          }}
+        />
+
+      </td>
+      <td>
+        <Input
+          type='number'
+          placeholder="Bars to generate"
+          defaultValue={12}
+          min="1"
+          max="1000"
+          onChange={(e) => {
+            console.log(e.target.value);
+            const newSongInfo = { ...song };
+            newSongInfo.generationOptions.length = parseInt(e.target.value);
+            if (typeof newSongInfo.generationOptions.length !== 'number' || isNaN(newSongInfo.generationOptions.length)) {
+              return;
+            }
+            onChange(newSongInfo);
+          }}
+        />
+
+      </td>
+      <td>
+        <Input
+          type='number'
+          placeholder="Song selection"
+          min="0"
+          max="127"
+          onChange={(e) => {
+            console.log(e.target.value);
+            const newSongInfo = { ...song };
+            newSongInfo.midiSelection.value = parseInt(e.target.value);
+            if (typeof newSongInfo.midiSelection.value !== 'number' || isNaN(newSongInfo.midiSelection.value)) {
+              return;
+            }
+            onChange(newSongInfo);
+          }}
+        />
+
+      </td>
+      <td>
+        <DeleteButton onClick={() => { console.log('should delete') }} />
+      </td>
+    </tr>
   )
 }

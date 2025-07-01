@@ -25,6 +25,10 @@ export interface NoteHistory {
   output: NoteEvent[];
   timestamp: Date;
 }
+export interface GenerationOptions {
+  order: number;
+  length: number; // bar length
+}
 export interface Song {
   name: string;
   trainingData: TrainingData[];
@@ -34,7 +38,8 @@ export interface Song {
   midiSelection: {
     cc: number;
     value: number;
-  }
+  };
+  generationOptions: GenerationOptions;
 }
 
 export interface Project {

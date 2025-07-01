@@ -1,25 +1,39 @@
 #songContainer {
   width: 100%;
-}
-#songs-container{ 
+  table-layout: auto;
+  gap: 16px;
   margin-bottom: 16px;
+
+  & td {
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 16px;
+  }
+
+  & td:first-child {
+    padding-left: 0px;
+  }
+
+  & td:last-child {
+    padding-right: 0px;
+  }
+
+  & tr {
+    padding-top: 16px;
+  }
 }
+
+#songs-container {
+  margin-bottom: 16px;
+  width: 100%;
+  grid-row: 2;
+  grid-column: span;
+}
+
 #song-labels {
   width: 100%;
   font-weight: bold;
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  justify-content: space-between;
-  padding-bottom: 8px;
   border-bottom: 2px solid black;
-  margin-bottom: 16px;
-
-}
-#song-labels span {
-  display: flex;
-  flex-shrink: 1;
-  width: 20%;
 }
 
 #addSongButton {
@@ -27,9 +41,9 @@
   border-radius: 4px;
   background-color: grey;
 }
-.song-container {
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
+
+.file-button {
+  & span {
+    margin-left: 16px;
+  }
 }

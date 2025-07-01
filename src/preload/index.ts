@@ -1,7 +1,7 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 import { contextBridge, ipcRenderer } from 'electron';
-import { MidiInterfaceInfo } from '../main/types';
+import { MidiInterfaceInfo, Project } from '../main/types';
 
 
 type MidiInterfaceCallback = (info: MidiInterfaceInfo) => void;
@@ -26,6 +26,13 @@ const ipcApi = {
   onMidiOutput: (callback: MidiInterfaceCallback) => {
     ipcRenderer.on('midi:currentMidiOutput', (_event, value) => { callback(value); });
   },
+
+  project: {
+    getCurrent: () => ipcRenderer.invoke('project:getCurrent'),
+    update: (project: Partial<Project>) => ipcRenderer.invoke('project:update', project),
+    load: (path: string) => ipcRenderer.invoke('project:load', path),
+    save: (path: string) => ipcRenderer.invoke('project:save', path),
+  }
 
 }
 

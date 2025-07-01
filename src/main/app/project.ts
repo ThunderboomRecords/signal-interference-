@@ -3,7 +3,7 @@
 // Active project is always stored in the most recent file
 import { app } from 'electron';
 import { ACTIVE_PROJECT_APP_DATA_FILENAME, DEFAULT_BEAT_PER_BAR } from '../constants';
-import { GenerationStemData, NoteHistory, Project as ProjectI, Song as SongI, TrainingData } from '../types';
+import { GenerationOptions, GenerationStemData, NoteHistory, Project as ProjectI, Song as SongI, TrainingData } from '../types';
 import * as path from 'path';
 import fs from 'fs/promises';
 import { FileEdit } from 'lucide-react';
@@ -15,12 +15,15 @@ export class Song implements SongI {
   history?: NoteHistory[];
   stemData: GenerationStemData[];
   midiSelection: { cc: number; value: number; };
+  generationOptions: GenerationOptions;
   constructor(beatsPerBar = DEFAULT_BEAT_PER_BAR) {
     this.trainingData = [];
     this.beatsPerBar = beatsPerBar;
     this.history = [];
     this.stemData = [];
     this.midiSelection.cc = 56;
+    this.generationOptions.order = 11;
+    this.generationOptions.length = 12;
   }
 
 }
@@ -96,3 +99,9 @@ export function deleteProject() {
 // loads it on boot.
 loadProjectInAppData();
 
+export function getCurrentProject(): ProjectI {
+  return {
+    lastSavePath: '',
+    songs: [],
+  };
+}
