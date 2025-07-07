@@ -9,8 +9,8 @@ export default function init() {
   Midi.init();
   FileIO.init();
 
-  ipcMain.handle('setting:update', (_event) => {
+  initProject();
+  ipcMain.handle('setting:update', (_event, key, value) => {
     return mainApp.updateSetting(key, value);
   });
-  initProject();
 }

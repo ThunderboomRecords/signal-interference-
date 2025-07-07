@@ -97,11 +97,16 @@ export function deleteProject() {
 }
 
 // loads it on boot.
-loadProjectInAppData();
+try {
+  loadProjectInAppData();
+  console.log('loaded project from app data', currentProject);
+} catch (err) {
+  console.error('could not load project from app data, creating new project', err);
+  createProject();
+}
 
 export function getCurrentProject(): ProjectI {
   return {
-    lastSavePath: '',
-    songs: [],
+    ...currentProject
   };
 }

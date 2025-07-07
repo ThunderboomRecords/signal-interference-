@@ -7,7 +7,9 @@ export default function init() {
     console.log('hello')
     return getCurrentProject();
   });
-  ipcMain.on('project:update', (_event, project: Partial<Project>) => {
+  ipcMain.handle('project:update', (_event, project: Partial<Project>) => {
+    console.log('updating project', project);
+
     updateProject(project);
   });
   ipcMain.handle('project:load', (_event, path: string) => {

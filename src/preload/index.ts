@@ -7,25 +7,27 @@ import { MidiInterfaceInfo, Project } from '../main/types';
 type MidiInterfaceCallback = (info: MidiInterfaceInfo) => void;
 
 const ipcApi = {
+  midiConfiguration: {
+    setClock: (midiClockId: number) => ipcRenderer.send('midi:setClock', midiClockId),
+    setInputChannel: (midiInput: number) => ipcRenderer.send('midi:setInput', midiInput),
+    setOutputChannel: (midiOutput: number) => ipcRenderer.send('midi:setOutput', midiOutput),
+    // invoking
+    getMidiInputs: () => ipcRenderer.invoke('midi:getPorts'),
+    onMidiClock: (callback: MidiInterfaceCallback) => {
+      ipcRenderer.on('midi:currentClockInput', (_event, value) => { callback(value); });
+    },
+    onMidiInput: (callback: MidiInterfaceCallback) => {
+      ipcRenderer.on('midi:currentMidiInput', (_event, value) => { callback(value); });
+    },
+    onMidiOutput: (callback: MidiInterfaceCallback) => {
+      ipcRenderer.on('midi:currentMidiOutput', (_event, value) => { callback(value); });
+    },
+  },
 
   // set
-  setClock: (midiClockId: number) => ipcRenderer.send('midi:setClock', midiClockId),
-  setInputChannel: (midiInput: number) => ipcRenderer.send('midi:setInput', midiInput),
-  setOutputChannel: (midiOutput: number) => ipcRenderer.send('midi:setOutput', midiOutput),
-  // invoking
-  getMidiInputs: () => ipcRenderer.invoke('midi:getPorts'),
   updateSetting: (key: string, value: string) => { return ipcRenderer.invoke('setting:update', key, value); },
   openFileDialog: () => ipcRenderer.invoke('dialog:openFile'),
   // receiving
-  onMidiClock: (callback: MidiInterfaceCallback) => {
-    ipcRenderer.on('midi:currentClockInput', (_event, value) => { callback(value); });
-  },
-  onMidiInput: (callback: MidiInterfaceCallback) => {
-    ipcRenderer.on('midi:currentMidiInput', (_event, value) => { callback(value); });
-  },
-  onMidiOutput: (callback: MidiInterfaceCallback) => {
-    ipcRenderer.on('midi:currentMidiOutput', (_event, value) => { callback(value); });
-  },
 
   project: {
     getCurrent: () => ipcRenderer.invoke('project:getCurrent'),

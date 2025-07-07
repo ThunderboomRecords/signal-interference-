@@ -1,8 +1,16 @@
-import { debounce } from "src/helpers";
 import { NoteEvent, Song } from "src/main/types";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@radix-ui/react-dialog"
 import { Trash2 } from "lucide-react";
+import React, { useState } from "react";
 
 
 function FileUpload(props: {
@@ -22,7 +30,7 @@ function FileUpload(props: {
               files: string[],
               midiFiles: { name: string, filePath: string, notes: NoteEvent[] }[]
             }) => {
-            const { canceled, files } = dialogOutput;
+            const { canceled } = dialogOutput;
             if (canceled) return;
             console.log({ dialogOutput });
             const output = dialogOutput.midiFiles.map((file) => ({
@@ -44,12 +52,32 @@ function FileUpload(props: {
 
 function DeleteButton(props: { onClick: () => void }) {
   const { onClick } = props;
-  // TODO add an are you sure delete button dialog
+
   return (
-    <Button onClick={onClick}>
-      <Trash2 />
-    </Button>
-  )
+    <Dialog>
+      <form>
+        <DialogTrigger asChild>
+          <Button>
+            <Trash2 />
+          </Button>
+        </DialogTrigger>
+        <div className="dialog-wrapper">
+          <DialogContent className="sm:max-w-[425px] dialog-content">
+            <DialogTitle>Item verwijderen</DialogTitle>
+            <DialogDescription>
+              Weet je zeker dat je dit wil verwijderen?
+            </DialogDescription>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <Button onClick={onClick}>Verwijderen</Button>
+              <DialogClose asChild>
+                <Button>Annuleren</Button>
+              </DialogClose>
+            </div>
+          </DialogContent>
+        </div>
+      </form>
+    </Dialog >
+  );
 }
 
 
@@ -61,15 +89,19 @@ export default function SongBar(props: {
   onDelete?: (song: Song) => void,
 }) {
   const { song, selected, onSelect, onChange } = props;
+
   const trainingFileNames = song.trainingData.map((fileName) => fileName.name.split(/[\\/]/).slice(-1)[0]);
+
+  const [markovOrder, setMarkovOrder] = useState(song.generationOptions.order);
+  const [barsToGenerate, setBarsToGenerate] = useState(song.generationOptions.length);
+  const [songSelection, setSongSelection] = useState(song.midiSelection.value);
 
   return (
     <tr onClick={() => { onSelect(song) }} className={`song-container ${selected && 'selected'}`}>
       <td>
         <Input onInput={(e) => {
-          console.log(e.target.value);
           const newSongInfo = { ...song };
-          newSongInfo.name = e.target.value;
+          newSongInfo.name = (e.target as HTMLInputElement).value;
           onChange(newSongInfo);
         }}
           type='text'
@@ -85,15 +117,14 @@ export default function SongBar(props: {
         }} />
       </td>
       <td>
-        <Input min="1" max="1000" type='number' placeholder="Markov Order" defaultValue={12}
+        <Input min="1" max="1000" type='number' placeholder="Markov Order" value={markovOrder}
           onChange={(e) => {
-            console.log(e.target.value);
-            const newSongInfo = { ...song };
-            newSongInfo.generationOptions.order = parseInt(e.target.value);
-            if (typeof newSongInfo.generationOptions.order !== 'number' || isNaN(newSongInfo.generationOptions.order)) {
-              return;
+            const newMarkovOrder = parseInt(e.target.value);
+            if (!isNaN(newMarkovOrder)) {
+              setMarkovOrder(newMarkovOrder);
+              const newSongInfo = { ...song, generationOptions: { ...song.generationOptions, order: newMarkovOrder } };
+              onChange(newSongInfo);
             }
-            onChange(newSongInfo);
           }}
         />
 
@@ -102,17 +133,16 @@ export default function SongBar(props: {
         <Input
           type='number'
           placeholder="Bars to generate"
-          defaultValue={12}
+          value={barsToGenerate}
           min="1"
           max="1000"
           onChange={(e) => {
-            console.log(e.target.value);
-            const newSongInfo = { ...song };
-            newSongInfo.generationOptions.length = parseInt(e.target.value);
-            if (typeof newSongInfo.generationOptions.length !== 'number' || isNaN(newSongInfo.generationOptions.length)) {
-              return;
+            const newBarsToGenerate = parseInt(e.target.value);
+            if (!isNaN(newBarsToGenerate)) {
+              setBarsToGenerate(newBarsToGenerate);
+              const newSongInfo = { ...song, generationOptions: { ...song.generationOptions, length: newBarsToGenerate } };
+              onChange(newSongInfo);
             }
-            onChange(newSongInfo);
           }}
         />
 
@@ -121,16 +151,16 @@ export default function SongBar(props: {
         <Input
           type='number'
           placeholder="Song selection"
+          value={songSelection}
           min="0"
           max="127"
           onChange={(e) => {
-            console.log(e.target.value);
-            const newSongInfo = { ...song };
-            newSongInfo.midiSelection.value = parseInt(e.target.value);
-            if (typeof newSongInfo.midiSelection.value !== 'number' || isNaN(newSongInfo.midiSelection.value)) {
-              return;
+            const newSongSelection = parseInt(e.target.value);
+            if (!isNaN(newSongSelection)) {
+              setSongSelection(newSongSelection);
+              const newSongInfo = { ...song, midiSelection: { ...song.midiSelection, value: newSongSelection } };
+              onChange(newSongInfo);
             }
-            onChange(newSongInfo);
           }}
         />
 

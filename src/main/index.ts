@@ -9,6 +9,8 @@ if (started) {
   app.quit();
 }
 
+
+initCommands();
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -26,7 +28,6 @@ const createWindow = () => {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
 
-  initCommands();
   // Open theDevTools.
   mainWindow.webContents.openDevTools();
 

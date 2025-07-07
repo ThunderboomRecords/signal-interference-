@@ -47,3 +47,34 @@
     margin-left: 16px;
   }
 }
+
+.dialog-wrapper {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  pointer-events: none;
+
+  & div {
+    padding-left: auto;
+    padding-right: auto;
+  }
+}
+
+.dialog-content {
+  width: 100%;
+  max-width: 600px;
+  background-color: var(--color-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  pointer-events: auto;
+  padding: 16px;
+  margin-left: auto;
+  margin-right: auto;
+  border: 1px solid var(--color-border);
+
+}
