@@ -1,7 +1,15 @@
+:root {
+  --color-button-active-background: #696969;
+  --color-button-active-foreground: #000;
+}
+
 #GeneralControls {
   width: 100%;
   min-height: 2em;
   padding-top: 1em;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
 }
 
 .midi-selector {
@@ -13,6 +21,38 @@
 
 .midi-selector label {
   display: flex;
-  margin-right: 1rem;
-  min-width: 4rem;
+  margin-right: 0.5rem;
+}
+
+#MediaControls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+
+  & button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background-color: var(--color-button-background, #f0f0f0);
+    color: var(--color-button-foreground, #333);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: flex;
+    justify-content: column;
+    text-align: center;
+    gap: 8px;
+
+    &:hover {
+      background-color: var(--color-button-hover-background, #e0e0e0);
+    }
+  }
+}
+
+.active-button {
+  border: 1px solid black !important;
+}
+
+.active-button svg {
+  fill: black;
 }

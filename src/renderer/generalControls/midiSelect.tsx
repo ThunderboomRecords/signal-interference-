@@ -76,19 +76,19 @@ export default function MidiSelect() {
 
 
   const getContents = async () => {
-    const inputs = await window.electronApi.getMidiInputs();
+    const inputs = await window.electronApi.midiConfiguration.getMidiInputs();
     setMidiIO(inputs);
   }
 
   useEffect(() => {
     getContents();
-    window.electronApi.onMidiInput((value: MidiInterfaceInfo) => {
+    window.electronApi.midiConfiguration.onMidiInput((value: MidiInterfaceInfo) => {
       setMidiInput(value.name);
     });
-    window.electronApi.onMidiOutput((value: MidiInterfaceInfo) => {
+    window.electronApi.midiConfiguration.onMidiOutput((value: MidiInterfaceInfo) => {
       setMidiOutput(value.name);
     });
-    window.electronApi.onMidiClock((value: MidiInterfaceInfo) => {
+    window.electronApi.midiConfiguration.onMidiClock((value: MidiInterfaceInfo) => {
       setClockInput(value.name);
     });
   }, []);
