@@ -1,5 +1,5 @@
 import { ipcMain, ipcRenderer } from 'electron';
-import { getCurrentProject, loadProject, saveProject, updateProject } from "../app/project";
+import { addNewsong, getCurrentProject, loadProject, saveProject, updateProject } from "../app/project";
 import { Project } from '../types';
 
 export default function init() {
@@ -17,5 +17,8 @@ export default function init() {
   });
   ipcMain.handle('project:save', (_event, path: string) => {
     return saveProject(path);
+  });
+  ipcMain.handle('project:newSong', (_event) => {
+    return addNewsong();
   });
 }

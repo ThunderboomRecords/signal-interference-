@@ -90,10 +90,10 @@ export default function Songs() {
             <td>
               <Button
                 id='addSongButton'
-                onClick={() => {
-                  const newSong = { ...initSong };
-                  setSongs([...songs, newSong]);
-                  setActiveSong(newSong);
+                onClick={async () => {
+                  const newProject = await window.electronApi.project.addNewsong();
+                  setSongs(newProject.songs);
+                  setActiveSong(newProject.songs.slice(-1));
                 }}
               >+ Add Song</Button>
             </td>

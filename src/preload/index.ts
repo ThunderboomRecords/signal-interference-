@@ -34,6 +34,7 @@ const ipcApi = {
     update: (project: Partial<Project>) => ipcRenderer.invoke('project:update', project),
     load: (path: string) => ipcRenderer.invoke('project:load', path),
     save: (path: string) => ipcRenderer.invoke('project:save', path),
+    addNewsong: () => ipcRenderer.invoke('project:newSong'),
   }
 
 }

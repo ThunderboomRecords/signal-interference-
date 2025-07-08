@@ -31,6 +31,7 @@ export interface GenerationOptions {
 }
 export interface Song {
   name: string;
+  id: string;
   trainingData: TrainingData[];
   stemData: GenerationStemData[];
   beatsPerBar: number;

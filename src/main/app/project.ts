@@ -7,9 +7,11 @@ import { GenerationOptions, GenerationStemData, NoteHistory, Project as ProjectI
 import * as path from 'path';
 import fs from 'fs/promises';
 import { FileEdit } from 'lucide-react';
+import crypto from 'crypto';
 
 export class Song implements SongI {
   name: string;
+  id: string;
   trainingData: TrainingData[];
   beatsPerBar: number;
   history?: NoteHistory[];
@@ -24,9 +26,12 @@ export class Song implements SongI {
     this.midiSelection.cc = 56;
     this.generationOptions.order = 11;
     this.generationOptions.length = 12;
+    this.id = crypto.randomUUID();
   }
 
 }
+
+
 export class Project implements ProjectI {
   songs: SongI[];
   lastSavePath?: string;
@@ -83,6 +88,12 @@ export async function loadProject(path: string) {
   currentProject = project;
   await updateProjectInAppData(currentProject);
   return project;
+}
+
+export async function addNewsong() {
+  currentProject.songs.concat(new Song());
+  await updateProject(currentProject);
+  return currentProject;
 }
 
 export async function updateProject(project: Partial<ProjectI>) {
