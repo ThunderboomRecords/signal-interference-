@@ -6,8 +6,8 @@ import { ACTIVE_PROJECT_APP_DATA_FILENAME, DEFAULT_BEAT_PER_BAR } from '../const
 import { GenerationOptions, GenerationStemData, NoteHistory, Project as ProjectI, Song as SongI, TrainingData } from '../types';
 import * as path from 'path';
 import fs from 'fs/promises';
-import { FileEdit } from 'lucide-react';
 import crypto from 'crypto';
+import { getSongFromId } from '../helpers';
 
 export class Song implements SongI {
   name: string;
@@ -23,9 +23,8 @@ export class Song implements SongI {
     this.beatsPerBar = beatsPerBar;
     this.history = [];
     this.stemData = [];
-    this.midiSelection.cc = 56;
-    this.generationOptions.order = 11;
-    this.generationOptions.length = 12;
+    this.midiSelection = { cc: 56, value: 0 };
+    this.generationOptions = { order: 12, barsToGenerate: 12 };
     this.id = crypto.randomUUID();
   }
 
@@ -35,9 +34,32 @@ export class Song implements SongI {
 export class Project implements ProjectI {
   songs: SongI[];
   lastSavePath?: string;
-  constructor() {
-    this.songs = [];
-    this.lastSavePath = undefined;
+  activeSongId?: string;
+  constructor();
+  constructor(project?: Partial<ProjectI | Project>);
+  constructor(project?: Partial<ProjectI | Project>) {
+    if (project?.songs) {
+      this.songs = [...project.songs];
+    } else {
+      this.songs = [];
+    }
+    this.lastSavePath = project?.lastSavePath || undefined;
+    this.activeSongId = project?.activeSongId || undefined;
+  }
+  findSongIndex(song: Song) {
+    return this.songs.findIndex((e) => e.id === song.id);
+  }
+  updateSong(song: Partial<Song>) {
+    if (!song.id) {
+      console.error('no song id provided, could not update');
+      return;
+    }
+    const index = this.findSongIndex(song as Song);
+    if (index < 0) {
+      console.error('could not find song to update');
+      return;
+    }
+    this.songs[index] = { ...this.songs[index], ...song };
   }
 }
 
@@ -90,21 +112,33 @@ export async function loadProject(path: string) {
   return project;
 }
 
-export async function addNewsong() {
-  currentProject.songs.concat(new Song());
-  await updateProject(currentProject);
-  return currentProject;
-}
 
 export async function updateProject(project: Partial<ProjectI>) {
   // can do a partial update
-  const updatedProject = { ...currentProject, ...project };
+  const updatedProject = new Project({ ...currentProject, ...project });
   currentProject = updatedProject;
   await updateProjectInAppData(currentProject);
+}
+export async function updateSongInProject(song: Partial<Song>) {
+  currentProject.updateSong(song);
+  const updatedProject = { ...currentProject };
+  await updateProjectInAppData(updatedProject);
 }
 // basically new project
 export function deleteProject() {
   return createProject();
+}
+
+export async function addNewsong() {
+  const newSong = new Song();
+  currentProject.songs.push(newSong);
+  currentProject.activeSongId = newSong.id;
+  await updateProject(currentProject);
+  return currentProject;
+}
+export async function setActiveSong(id: string) {
+  currentProject.activeSongId = id;
+  await updateProject(currentProject);
 }
 
 // loads it on boot.
@@ -116,8 +150,9 @@ try {
   createProject();
 }
 
-export function getCurrentProject(): ProjectI {
-  return {
-    ...currentProject
-  };
+export function getCurrentProject(): Project {
+  return new Project(currentProject);
+}
+export function getCurrentSong(): Song | undefined {
+  return getSongFromId(currentProject.activeSongId, currentProject.songs);
 }

@@ -27,7 +27,7 @@ export interface NoteHistory {
 }
 export interface GenerationOptions {
   order: number;
-  length: number; // bar length
+  barsToGenerate: number; // bar length
 }
 export interface Song {
   name: string;
@@ -35,6 +35,7 @@ export interface Song {
   trainingData: TrainingData[];
   stemData: GenerationStemData[];
   beatsPerBar: number;
+  // stores recorded notes and the notes that are generated from it.
   history?: NoteHistory[];
   midiSelection: {
     cc: number;
@@ -46,4 +47,5 @@ export interface Song {
 export interface Project {
   songs: Song[];
   lastSavePath?: string;
+  activeSongId?: string,
 }

@@ -120,6 +120,8 @@ export default class Sequencer {
     this.noteOnEvents = {};
     this.recordedEvents = [];
     this.stopRecordingCallback = callback;
+    console.log("starting recording", bars);
+    console.log({ current: this });
   }
   stopRecording() {
     console.log('stopping recording');

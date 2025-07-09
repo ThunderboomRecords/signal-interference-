@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import SongComponent from './song';
 import './index.css';
 import { GenerationStemData, Song, TrainingData } from 'src/main/types';
+import { Project } from 'src/main/app/project';
 
 const initSong: Song = {
   name: '',
@@ -19,10 +20,10 @@ const initSong: Song = {
 function RenderSongs(props: {
   songs: Song[],
   selectSong: (song: Song) => void,
-  activeSong: Song,
+  activeSongId: string,
   onChange: (songs: Song[]) => void
 }) {
-  const { songs, selectSong, activeSong, onChange } = props;
+  const { songs, selectSong, activeSongId, onChange } = props;
 
   return (
     <>
@@ -31,7 +32,7 @@ function RenderSongs(props: {
           <SongComponent
             key={index}
             song={song}
-            selected={activeSong.name === song.name}
+            selected={activeSongId === song.id}
             onSelect={() => selectSong(song)}
             onChange={(e) => {
               const newSongs = [...songs];
@@ -45,15 +46,25 @@ function RenderSongs(props: {
   );
 }
 export default function Songs() {
-  const [activeSong, setActiveSong] = useState(initSong);
+  const [activeSong, setActiveSong] = useState<string | undefined>(undefined);
   const [hasGottenCurrentSongs, setHasGottenCurrentSongs] = useState(false);
   const [songs, setSongs] = useState<Song[]>([]);
 
+  const setSong = (song: Song) => {
+    window.electronApi.project.selectSong(song);
+    setActiveSong(song.id);
+  }
   useEffect(() => {
     // get songs
-    const inputs = window.electronApi.project.getCurrent().then((val) => {
+    const inputs = window.electronApi.project.getCurrent().then((val: Project) => {
       setSongs(val.songs);
       setHasGottenCurrentSongs(true);
+      if (val.activeSongId) {
+        setActiveSong(val.activeSongId);
+      } else if (val.songs.length > 0) {
+        setSong(val.songs[0]);
+      }
+      console.log({ project: val });
     });
   }, []);
   useEffect(() => {
@@ -63,6 +74,14 @@ export default function Songs() {
     window.electronApi.project.update({ songs: songs });
     console.log({ songs });
   }, [songs]);
+
+  useEffect(() => {
+    // set active song to the first song if none are selected
+    if (!activeSong && songs.length > 0) {
+      setSong(songs[0]);
+      console.log('activeSongs', activeSong);
+    }
+  }, [activeSong])
   return (
     <>
       <table id='songContainer'>
@@ -78,8 +97,10 @@ export default function Songs() {
         <tbody id='songs-container'>
           <RenderSongs
             songs={songs}
-            selectSong={setActiveSong}
-            activeSong={activeSong}
+            selectSong={(song) => {
+              setSong(song)
+            }}
+            activeSongId={activeSong}
             onChange={(songs) => {
               setSongs(songs);
             }}
@@ -92,6 +113,7 @@ export default function Songs() {
                 id='addSongButton'
                 onClick={async () => {
                   const newProject = await window.electronApi.project.addNewsong();
+                  console.log({ newProject });
                   setSongs(newProject.songs);
                   setActiveSong(newProject.songs.slice(-1));
                 }}

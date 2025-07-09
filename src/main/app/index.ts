@@ -1,6 +1,6 @@
 import Sequencer from "../midi/sequencer";
 import { getMidiPortNumberByName, midiPorts } from "../midi/io";
-import { ApplicationSettings, NoteEvent } from "../types";
+import { ApplicationSettings, NoteEvent, Song } from "../types";
 import { getNotesPerBar } from "./helpers";
 import HigherOrderMarkovChain from "../markov/model";
 import { parseMidiFile } from "../midi/fileIO";
@@ -9,6 +9,8 @@ import { defineConfig } from "vite";
 import { app, BrowserWindow } from "electron";
 import fs from 'fs/promises';
 import { SETTINGS_FILENAME } from "../constants";
+import { getCurrentProject, getCurrentSong, updateProject, updateSongInProject } from "./project";
+import { getSongFromId } from "../helpers";
 
 let generatedOutput: NoteEvent[] = [];
 const DEFAULT_MAX_ORDER = 12;
@@ -30,11 +32,34 @@ export function stopRecording() {
 }
 function recordingCallback(notes: NoteEvent[]) {
   // save current recording 
+  if (!notes) {
+    console.log(notes);
+    return;
+  }
   recordedNotes = [...notes];
   generativeInput = [...notes];
+  console.log('stopped recording', recordedNotes);
+  const currentSong = getCurrentSong();
+  console.log({ currentSong });
+
+  currentSong.history.push({
+    input: [...notes],
+    output: [],
+    timestamp: new Date(),
+  });
+  console.log('stopped recording', currentSong);
+  updateSongInProject(currentSong);
 }
-export function startRecording(bars: number) {
-  sequencer.startRecording(bars, recordingCallback);
+export function startRecording() {
+  const currentSong = getCurrentSong();
+  if (!currentSong) {
+    console.error('no song selected for recording');
+    return;
+  }
+  console.log({ currentSong: JSON.stringify(currentSong, null, 2) });
+
+  console.log(sequencer);
+  sequencer.startRecording(currentSong?.generationOptions?.barsToGenerate || 1, recordingCallback);
 }
 
 export function startPlayback() {

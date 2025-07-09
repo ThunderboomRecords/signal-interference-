@@ -4,10 +4,12 @@ import { getMidiIOPorts } from '../midi/io';
 
 // should register all the different functions in here
 export function init() {
-  ipcMain.on('sequencer:selectSong',);
-  ipcMain.on('midi:setClock', (_event, port) => { mainApp.setClockInput(port); });
-  ipcMain.on('midi:setInput', (_event, port) => { mainApp.setRecordingInput(port); });
-  ipcMain.on('midi:setOutput', (_event, port) => { mainApp.setMidiOutput(port); });
+
+  // sequencer playback
+  ipcMain.handle('sequencer:record', (_event) => { mainApp.startRecording(); });
+  ipcMain.handle('sequencer:stopRecording', (_event) => { mainApp.stopRecording(); });
+
+
 }
 
 

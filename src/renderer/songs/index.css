@@ -108,5 +108,11 @@
     border: 2px solid black;
     border-radius: 4px;
     padding-left: 8px;
+    pointer-events: none;
   }
+}
+
+.name-input {
+  margin-left: 8px;
+  box-sizing: border-box;
 }

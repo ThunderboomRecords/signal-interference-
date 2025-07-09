@@ -93,13 +93,13 @@ export default function SongBar(props: {
   const trainingFileNames = song.trainingData.map((fileName) => fileName.name.split(/[\\/]/).slice(-1)[0]);
 
   const [markovOrder, setMarkovOrder] = useState(song.generationOptions.order);
-  const [barsToGenerate, setBarsToGenerate] = useState(song.generationOptions.length);
+  const [barsToGenerate, setBarsToGenerate] = useState(song.generationOptions.barsToGenerate);
   const [songSelection, setSongSelection] = useState(song.midiSelection.value);
 
   return (
     <tr onClick={() => { onSelect(song) }} className={`song-container ${selected && 'selected'}`}>
       <td>
-        <Input onInput={(e) => {
+        <Input className="name-input" onInput={(e) => {
           const newSongInfo = { ...song };
           newSongInfo.name = (e.target as HTMLInputElement).value;
           onChange(newSongInfo);
@@ -140,7 +140,7 @@ export default function SongBar(props: {
             const newBarsToGenerate = parseInt(e.target.value);
             if (!isNaN(newBarsToGenerate)) {
               setBarsToGenerate(newBarsToGenerate);
-              const newSongInfo = { ...song, generationOptions: { ...song.generationOptions, length: newBarsToGenerate } };
+              const newSongInfo = { ...song, generationOptions: { ...song.generationOptions, barsToGenerate: newBarsToGenerate } };
               onChange(newSongInfo);
             }
           }}
