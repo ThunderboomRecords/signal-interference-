@@ -1,5 +1,41 @@
-import { Song } from "../types";
+import { Note } from "@tonejs/midi/dist/Note";
+import { NoteEvent, Song } from "../types";
 
 export function getSongFromId(id: string, songs: Song[]) {
   return songs.filter((song) => song.id === id)?.[0] || undefined;
+}
+export function getLatestGeneratedOutput(song: Song): undefined | NoteEvent[] {
+  if (song.history.length === 0) {
+    return undefined;
+  }
+  const history = song.history.slice(-1)[0];
+  if (history.output.length === 0) {
+    return undefined;
+  }
+  return history.output.slice(-1)[0].notes;
+}
+export function getLatestRecording(song: Song): undefined | NoteEvent[] {
+  if (song.history.length === 0) {
+    return undefined;
+  }
+  const history = song.history.slice(-1)[0];
+  return history.input.notes;
+}
+
+export function addNewGeneratedData(song: Song, notes: NoteEvent[]): Song {
+  if (!song.history[song.history.length - 1]) {
+    // no history present so create one
+    song.history.push({
+      input: {
+        notes: [],
+        timestamp: new Date(),
+      },
+      output: [],
+    });
+  }
+  song.history[song.history.length - 1].output.push({
+    timestamp: new Date(),
+    notes: [...notes],
+  });
+  return song;
 }

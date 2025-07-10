@@ -36,12 +36,14 @@ export default class Sequencer {
   beatsPerBar: number;
 
   // recording
-  isRecording: boolean;
-  startRecordingTime: number;
-  noteOnEvents: { [note: number]: number };
-  recordedEvents: NoteEvent[];
-  stopRecordingOnBeat: number;
-  stopRecordingCallback: RecordingCallback | undefined;
+  recording: {
+    isRecording: boolean;
+    startRecordingTime: number;
+    noteOnEvents: { [note: number]: number };
+    recordedEvents: NoteEvent[];
+    stopRecordingOnBeat: number;
+    stopRecordingCallback: RecordingCallback | undefined;
+  }
 
   // playback
   isPlaying: boolean;
@@ -49,7 +51,7 @@ export default class Sequencer {
   playbackEvents: ScheduledNote[];
   stopPlaybackCallback: PlayingCallback | undefined;
   stopPlayingOnBeat: number;
-  noteOnPlayingEvents: { [note: number]: number };
+  noteOnPlayingEvents: Map<number, number>;
   outputChannel: number;
   defaultVelocity: number;
 
@@ -57,7 +59,6 @@ export default class Sequencer {
   ccCallbacks: { [command: number]: CCCallback };
 
   constructor(clock: Midi.Input, recordingInput: Midi.Input, output: Midi.Output) {
-    console.log('creating sequencer');
     this.clockInput = clock;
     this.recordingInput = recordingInput;
     this.noteOutput = output;
@@ -65,10 +66,18 @@ export default class Sequencer {
     this.clockCount = 0;
     this.bpm = undefined;
     this.beatsPerBar = 4;
+    this.noteOnPlayingEvents = new Map<number, number>();
+
 
     // recording
-    this.isRecording = false;
-    this.noteOnEvents = {};
+    this.recording = {
+      isRecording: false,
+      noteOnEvents: {},
+      startRecordingTime: -1,
+      recordedEvents: [],
+      stopRecordingOnBeat: -1,
+      stopRecordingCallback: undefined,
+    }
 
     // playback
     this.isPlaying = false;
@@ -87,17 +96,20 @@ export default class Sequencer {
   destructor() {
     // TODO: check if it needs to make sense to open and close ports in here.
   }
-
-  setClockInput(clock: Midi.Input) {
-    this.clockInput = clock;
-    this.clockInput.on('message', (deltaTime: number, message: Midi.MidiMessage) => {
+  private registerRecordingCallback() {
+    this.clockInput.on('message', (_deltaTime: number, message: Midi.MidiMessage) => {
       this.handleClockInput(message);
     });
   }
 
+  setClockInput(clock: Midi.Input) {
+    this.clockInput = clock;
+    this.registerRecordingCallback();
+  }
+
   setRecordingInput(recordingInput: Midi.Input) {
     this.recordingInput = recordingInput;
-    this.recordingInput.on('message', (deltaTime: number, message: Midi.MidiMessage) => {
+    this.recordingInput.on('message', (_deltaTime: number, message: Midi.MidiMessage) => {
       this.handleNoteRecordingInput(message);
     });
   }
@@ -115,30 +127,27 @@ export default class Sequencer {
 
   // recording
   startRecording(bars: number, callback?: RecordingCallback) {
-    this.stopRecordingOnBeat = this.clockCount + this.beatsPerBar * bars * CLOCKS_PER_BEAT;
-    this.startRecordingTime = this.clockCount;
-    this.noteOnEvents = {};
-    this.recordedEvents = [];
-    this.stopRecordingCallback = callback;
-    this.isRecording = true;
-    console.log("starting recording", bars);
-    console.log({ current: this });
-
+    this.recording.stopRecordingOnBeat = this.clockCount + this.beatsPerBar * bars * CLOCKS_PER_BEAT;
+    this.recording.startRecordingTime = this.clockCount;
+    this.recording.noteOnEvents = {};
+    this.recording.recordedEvents = [];
+    this.recording.stopRecordingCallback = callback;
+    this.recording.isRecording = true;
+    this.registerRecordingCallback();
   }
   stopRecording() {
-    console.log('stopping recording');
-    this.stopRecordingOnBeat = -1;
-    this.isRecording = false;
-    if (this.stopRecordingCallback) {
-      this.stopRecordingCallback([...this.recordedEvents]);
+    this.recording.stopRecordingOnBeat = -1;
+    this.recording.isRecording = false;
+    this.registerRecordingCallback();
+    if (this.recording.stopRecordingCallback) {
+      this.recording.stopRecordingCallback([...this.recording.recordedEvents]);
     }
 
   }
   private handleRecordingClock() {
-    console.log({ clock: this.clockCount, beat: this.stopRecordingOnBeat, seq: this });
-    if (this.stopRecordingOnBeat && this.stopRecordingOnBeat > 0) {
+    if (this.recording.stopRecordingOnBeat && this.recording.stopRecordingOnBeat > 0) {
       // should check if recording needs to be stopped
-      if (this.clockCount >= this.stopRecordingOnBeat) {
+      if (this.clockCount >= this.recording.stopRecordingOnBeat) {
         // should stop
         this.stopRecording();
       }
@@ -147,27 +156,27 @@ export default class Sequencer {
   }
 
   private recordNoteOn(note: number) {
-    const currentTime = this.clockCount - this.startRecordingTime;
-    this.noteOnEvents[note] = currentTime;
+    const currentTime = this.clockCount - this.recording.startRecordingTime;
+    this.recording.noteOnEvents[note] = currentTime;
   }
   private recordNoteOff(note: number) {
     // check if we have received a note on for this note
-    if (!this.noteOnEvents[note]) {
+    if (!this.recording.noteOnEvents[note]) {
       return;
     }
-    const currentTime = this.clockCount - this.startRecordingTime;
-    const deltaTime = this.noteOnEvents[note];
+    const currentTime = this.clockCount - this.recording.startRecordingTime;
+    const deltaTime = this.recording.noteOnEvents[note];
     const duration = currentTime - deltaTime;
-    const relativeDeltaTime = this.recordedEvents.length === 0
+    const relativeDeltaTime = this.recording.recordedEvents.length === 0
       ? deltaTime
-      : deltaTime - this.recordedEvents.reduce((sum, e) => sum + e.deltaTime, 0);
-    this.recordedEvents.push({
+      : deltaTime - this.recording.recordedEvents.reduce((sum, e) => sum + e.deltaTime, 0);
+    this.recording.recordedEvents.push({
       note,
       deltaTime: relativeDeltaTime,
       duration,
     });
 
-    delete this.noteOnEvents[note];
+    delete this.recording.noteOnEvents[note];
 
   }
   handleNoteRecordingInput(message: Midi.MidiMessage) {
@@ -176,14 +185,12 @@ export default class Sequencer {
 
     if (command === 0xB0) {
       const [_cmd, cc, data] = message;
-      console.log(this.ccCallbacks[cc]);
-      console.log(this.ccCallbacks);
       if (this.ccCallbacks[cc]) {
         this.ccCallbacks[cc](cc, data);
       }
     }
 
-    if (!this.isRecording) {
+    if (!this.recording.isRecording) {
       return
     }
     //const channel = status & 0x0F;
@@ -208,35 +215,46 @@ export default class Sequencer {
   // Playback
   private noteOff(note: number, channel: number = this.outputChannel) {
     this.noteOutput.sendMessage([MIDI_NOTE_OFF_ID + channel, note, 0]);
+    this.noteOnPlayingEvents.delete(note);
   }
 
   private noteOn(note: number, velocity: number = this.defaultVelocity, channel: number = this.outputChannel) {
-    console.log({ note, number, velocity });
-    this.noteOutput.sendMessage([MIDI_NOTE_ON_ID + channel, note, 0]);
+    this.noteOutput.sendMessage([MIDI_NOTE_ON_ID + channel, note, velocity]);
+    this.noteOnPlayingEvents.set(note, velocity);
   }
 
   startPlayback(events: NoteEvent[], callback?: PlayingCallback) {
-    console.log('starting playback');
     this.stopPlaybackCallback = callback;
     let accumulatedTicks = 0;
+    let endTime = 0;
     events.forEach((event) => {
       accumulatedTicks += event.deltaTime;
+      const endTick = accumulatedTicks + event.duration;
+      if (endTick > endTime) {
+        endTime = endTick
+      }
       this.playbackEvents.push({
         note: event.note,
         startTick: accumulatedTicks,
-        endTick: accumulatedTicks + event.duration,
+        endTick,
       });
     });
+    console.log({ notes: this.playbackEvents });
+    const numberOfBarsToPlay = (endTime - this.playbackEvents[0].startTick / CLOCKS_PER_BEAT) / 4;
+    console.log({ start: this.playbackEvents[0], end: this.playbackEvents.slice(-1)[0], numberOfBarsToPlay });
+
     this.startPlayingTime = this.clockCount;
+    this.stopPlayingOnBeat = endTime + this.clockCount;
+    this.isPlaying = true;
   }
 
   stopPlayback() {
     this.isPlaying = false;
-    const noteKeys = Object.keys(this.noteOnPlayingEvents).map(note => parseInt(note, 10));
-    noteKeys.forEach((note) => {
+    this.noteOnPlayingEvents.forEach((_value, note) => {
       // send note offs for all active notes
       this.noteOff(note);
     });
+    this.noteOnPlayingEvents.clear();
     if (this.stopPlaybackCallback) {
       this.stopPlaybackCallback();
     }
@@ -244,6 +262,7 @@ export default class Sequencer {
 
 
   private handlePlayback() {
+
     if (!this.isPlaying) {
       return;
     }
@@ -274,18 +293,14 @@ export default class Sequencer {
       }
       this.lastBeatTime = now;
       this.bpm = calculateBPM(this.beatTimes);
-      this.stopRecordingOnBeat = -1;
     }
   }
   handleClockInput(message: Midi.MidiMessage) {
-    const [command, data1, data2] = message;
+    const [command] = message;
     switch (command) {
       case 0xF8:
         // midi clock tick
         this.clockCount++;
-        if (this.clockCount % CLOCKS_PER_BEAT === 0) {
-          console.log(this.clockCount);
-        }
         this.handleBPMCalculation();
         this.handleRecordingClock();
         this.handlePlayback();

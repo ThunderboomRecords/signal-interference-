@@ -1,16 +1,14 @@
 import Sequencer from "../midi/sequencer";
 import { getMidiPortNumberByName, midiPorts } from "../midi/io";
 import { ApplicationSettings, NoteEvent, Song } from "../types";
-import { getNotesPerBar } from "./helpers";
 import HigherOrderMarkovChain from "../markov/model";
 import { parseMidiFile } from "../midi/fileIO";
 import * as path from 'path'
-import { defineConfig } from "vite";
 import { app, BrowserWindow } from "electron";
 import fs from 'fs/promises';
 import { SETTINGS_FILENAME } from "../constants";
 import { getCurrentProject, getCurrentSong, setActiveSong, updateProject, updateSongInProject } from "./project";
-import { getSongFromId } from "../helpers";
+import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording, getSongFromId } from "../helpers";
 
 let generatedOutput: NoteEvent[] = [];
 const DEFAULT_MAX_ORDER = 12;
@@ -18,18 +16,12 @@ const DEFAULT_MAX_ORDER = 12;
 const sequencer = new Sequencer(midiPorts.getClockPort(), midiPorts.getInputPort(), midiPorts.getOutputPort());
 
 let recordedNotes: NoteEvent[] = [];
-let generativeInput: NoteEvent[] = [];
-const currentModel: HigherOrderMarkovChain<NoteEvent> = new HigherOrderMarkovChain<NoteEvent>(DEFAULT_MAX_ORDER);
-let defaultInput: NoteEvent[] = [];
-
-parseMidiFile(path.join(__dirname, '../../assets/trainings_midi/solo.mid')).then((notes) => {
-  currentModel.addSequence([...notes]);
-  defaultInput = [...notes];
-});
 
 export function stopRecording() {
   sequencer.stopRecording();
+  mainWindow.webContents.send('sequencer:recordingStatus', false);
 }
+
 function recordingCallback(notes: NoteEvent[]) {
   // save current recording 
   if (!notes) {
@@ -37,18 +29,18 @@ function recordingCallback(notes: NoteEvent[]) {
     return;
   }
   recordedNotes = [...notes];
-  generativeInput = [...notes];
   console.log('stopped recording', recordedNotes);
   const currentSong = getCurrentSong();
   console.log({ currentSong });
 
   currentSong.history.push({
-    input: [...notes],
+    input: { notes: [...notes], timestamp: new Date() },
     output: [],
-    timestamp: new Date(),
   });
   console.log('stopped recording', currentSong);
+  mainWindow.webContents.send('sequencer:recordingStatus', false);
   updateSongInProject(currentSong);
+
 }
 export function startRecording(amountOfBars?: number) {
   const currentSong = getCurrentSong();
@@ -61,36 +53,60 @@ export function startRecording(amountOfBars?: number) {
   project.recordingLength = recordingLength;
   updateProject(project);
   sequencer.startRecording(recordingLength, recordingCallback);
+  mainWindow?.webContents.send('sequencer:recordingStatus', true);
 }
 
+function stopPlaybackCallback() {
+  mainWindow.webContents.send('sequencer:playbackStatus', false);
+}
 export function startPlayback() {
-  sequencer.startPlayback(generativeInput);
+  const currentSong = getCurrentSong();
+  const generatedOutput = getLatestGeneratedOutput(currentSong);
+  if (!generatedOutput) {
+    console.log('nothing to playback');
+    return;
+  }
+  console.log('using the following notes for playback', generatedOutput);
+  sequencer.startPlayback([...generatedOutput], stopPlaybackCallback);
+  mainWindow?.webContents.send('sequencer:playbackStatus', true);
 }
 export function stopPlayback() {
   sequencer.stopPlayback();
+  mainWindow?.webContents.send('sequencer:playbackStatus', false);
 }
 
-export function generate(bars: number) {
+export function generate() {
   //const maxOrder = getNotesPerBar(generativeInput, sequencer.beatsPerBar).reduce((max: number, e: number) => (e > max ? e : max), 0);
+  console.log('starting to generate');
+  const currentSong = getCurrentSong();
+  const bars = currentSong.generationOptions.barsToGenerate || 12;
+  const latestRecording = getLatestRecording(currentSong) || [];
+  const defaultInput = currentSong.trainingData.slice(-1)[0].notes;
   const maxOrder = DEFAULT_MAX_ORDER;
 
   let startSequence: NoteEvent[] = [];
-  if (generativeInput && generativeInput.length > 0) {
-    startSequence = generativeInput.slice(generativeInput.length - maxOrder, generativeInput.length);
+  if (latestRecording && latestRecording.length >= maxOrder) {
+    startSequence = latestRecording.slice(latestRecording.length - maxOrder, latestRecording.length);
   } else {
     startSequence = defaultInput.slice(defaultInput.length - maxOrder, defaultInput.length);
   }
   console.log({
     lengths: {
-      generativeInput: generativeInput.length,
+      generativeInput: latestRecording.length,
       defaultInput: defaultInput.length,
       startSequence: startSequence.length,
     }
   });
   const barsToGenerate = bars;
-  const generated = currentModel.generateBarsFuzzy(startSequence, barsToGenerate, sequencer.beatsPerBar);
+  const markov: HigherOrderMarkovChain<NoteEvent> = new HigherOrderMarkovChain<NoteEvent>(maxOrder);
+  currentSong.trainingData.forEach((data) => {
+    markov.addSequence(data.notes);
+  })
+  const generated = markov.generateBarsFuzzy(startSequence, barsToGenerate, sequencer.beatsPerBar);
   console.log({ generated });
   generatedOutput = [...generated];
+  const newSong = addNewGeneratedData(currentSong, generatedOutput);
+  updateSongInProject(newSong);
 }
 
 
@@ -125,8 +141,9 @@ function registerCallbacks() {
   sequencer.setCCCallback(56, (_cc, data) => { switchSong(data); })
 }
 
-export function init() {
+export function init(window: BrowserWindow) {
   registerCallbacks();
+  registerMainWindow(window);
 }
 
 export function setClockInput(port: number | string) {
@@ -236,4 +253,9 @@ export async function updateSetting(key: keyof ApplicationSettings, value: strin
   }
   writeSettingsToDisk(newSettings);
   return newSettings;
+}
+
+let mainWindow: undefined | BrowserWindow = undefined;
+export function registerMainWindow(window: BrowserWindow) {
+  mainWindow = window;
 }

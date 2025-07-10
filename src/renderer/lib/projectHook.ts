@@ -9,6 +9,9 @@ export default function useProject() {
       setProject(val);
     });
   }, []);
+  useEffect(() => {
+    console.log({ project });
+  }, [project]);
 
   const addSong = () => {
     window.electronApi.project.addNewsong().then((proj) => {
@@ -36,6 +39,7 @@ export default function useProject() {
       setProject(proj);
     });
   }
+
 
   return {
     project,

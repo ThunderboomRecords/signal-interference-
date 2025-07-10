@@ -1,3 +1,5 @@
+import { Note } from "@tonejs/midi/dist/Note";
+
 export type NoteEvent = { note: number; deltaTime: number; duration: number };
 
 export interface ApplicationSettings {
@@ -20,10 +22,16 @@ export interface GenerationStemData {
   name: string; // original file name
   notes: NoteEvent[];
 }
+
+
+
 export interface NoteHistory {
-  input: NoteEvent[];
-  output: NoteEvent[];
+  notes: NoteEvent[];
   timestamp: Date;
+}
+export interface History {
+  input: NoteHistory;
+  output: NoteHistory[];
 }
 export interface GenerationOptions {
   order: number;
@@ -36,7 +44,7 @@ export interface Song {
   stemData: GenerationStemData[];
   beatsPerBar: number;
   // stores recorded notes and the notes that are generated from it.
-  history?: NoteHistory[];
+  history?: History[];
   midiSelection: {
     cc: number;
     value: number;

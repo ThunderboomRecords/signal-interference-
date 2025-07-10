@@ -11,8 +11,11 @@ export function init() {
     mainApp.startRecording();
   });
   ipcMain.handle('sequencer:stopRecording', (_event) => { mainApp.stopRecording(); });
-
+  ipcMain.handle('sequencer:startPlayback', (_event) => { mainApp.startPlayback(); });
+  ipcMain.handle('sequencer:stopPlayback', (_event) => { mainApp.stopPlayback(); });
+  ipcMain.handle('sequencer:generate', (_event) => { mainApp.generate(); });
 
 }
+
 
 

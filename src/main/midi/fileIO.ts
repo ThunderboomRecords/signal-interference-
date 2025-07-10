@@ -28,6 +28,7 @@ export async function parseMidiFile(filePath: string): Promise<NoteEvent[]> {
   const notes = midi.tracks[0].notes;
   const events: NoteEvent[] = [];
 
+  console.log({ notes });
   for (let i = 0; i < notes.length; i++) {
     const note = notes[i];
     const previousTime = i > 0 ? getNoteTickTime(midi, notes[i - 1]) : 0;
@@ -39,6 +40,7 @@ export async function parseMidiFile(filePath: string): Promise<NoteEvent[]> {
       duration: convertToClockTicks(midi.header.secondsToTicks(note.duration), ppq),
     });
   }
+  console.log({ events });
 
   return events;
 }

@@ -31,7 +31,7 @@ const createWindow = () => {
   // Open theDevTools.
   mainWindow.webContents.openDevTools();
 
-  mainApp.init();
+  mainApp.init(mainWindow);
   mainWindow.on('ready-to-show', () => {
     mainApp.loadSettings(mainWindow);
   });

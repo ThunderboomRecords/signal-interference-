@@ -26,6 +26,18 @@ const ipcApi = {
   sequencer: {
     record: () => ipcRenderer.invoke('sequencer:record'),
     stopRecording: () => ipcRenderer.invoke('sequencer:stopRecording'),
+    onRecordingStatus: (callback: (status: boolean) => void) => ipcRenderer.on(
+      'sequencer:recordingStatus',
+      (_event, status) => callback(status)
+    ),
+    startPlayback: () => ipcRenderer.invoke('sequencer:startPlayback'),
+    stopPlayback: () => ipcRenderer.invoke('sequencer:stopPlayback'),
+
+    onPlaybackStatus: (callback: (status: boolean) => void) => ipcRenderer.on(
+      'sequencer:playbackStatus',
+      (_event, status) => callback(status)
+    ),
+    generate: () => ipcRenderer.invoke('sequencer:generate'),
   },
 
   // set
@@ -39,7 +51,7 @@ const ipcApi = {
     load: (path: string) => ipcRenderer.invoke('project:load', path),
     save: (path: string) => ipcRenderer.invoke('project:save', path),
     addNewsong: () => ipcRenderer.invoke('project:newSong'),
-    selectSong: (song: Song) => ipcRenderer.invoke('project:selectSong', song),
+    selectSong: (song: Partial<Song>) => ipcRenderer.invoke('project:selectSong', song),
     deleteSong: (song: Partial<Song>) => ipcRenderer.invoke('project:deleteSong', song),
   }
 

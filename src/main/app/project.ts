@@ -3,7 +3,7 @@
 // Active project is always stored in the most recent file
 import { app } from 'electron';
 import { ACTIVE_PROJECT_APP_DATA_FILENAME, DEFAULT_BEAT_PER_BAR } from '../constants';
-import { GenerationOptions, GenerationStemData, NoteHistory, Project as ProjectI, Song as SongI, TrainingData } from '../types';
+import { GenerationOptions, GenerationStemData, NoteHistory, Project as ProjectI, Song as SongI, TrainingData, History } from '../types';
 import * as path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
@@ -14,7 +14,7 @@ export class Song implements SongI {
   id: string;
   trainingData: TrainingData[];
   beatsPerBar: number;
-  history?: NoteHistory[];
+  history?: History[];
   stemData: GenerationStemData[];
   midiSelection: { cc: number; value: number; };
   generationOptions: GenerationOptions;
@@ -93,6 +93,7 @@ let currentProject = new Project();
 
 async function updateProjectInAppData(project: ProjectI) {
   const appDataPath = app.getPath('appData');
+  console.log({ appDataPath });
   const projectPath = path.join(appDataPath, ACTIVE_PROJECT_APP_DATA_FILENAME);
   const data = JSON.stringify(project, null, 0);
   try {
@@ -130,7 +131,7 @@ export async function loadProject(path: string) {
   // loads as project from a specific path
   // Note should warn in the UI that it will override the current project
   console.log('loading project', path);
-  const project = JSON.parse((await fs.readFile(path)).toString());
+  const project = new Project(JSON.parse((await fs.readFile(path)).toString()));
   currentProject = project;
   await updateProjectInAppData(currentProject);
   return project;
