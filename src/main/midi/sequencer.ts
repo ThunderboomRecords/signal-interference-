@@ -57,6 +57,7 @@ export default class Sequencer {
   ccCallbacks: { [command: number]: CCCallback };
 
   constructor(clock: Midi.Input, recordingInput: Midi.Input, output: Midi.Output) {
+    console.log('creating sequencer');
     this.clockInput = clock;
     this.recordingInput = recordingInput;
     this.noteOutput = output;
@@ -115,13 +116,14 @@ export default class Sequencer {
   // recording
   startRecording(bars: number, callback?: RecordingCallback) {
     this.stopRecordingOnBeat = this.clockCount + this.beatsPerBar * bars * CLOCKS_PER_BEAT;
-    this.isRecording = true;
     this.startRecordingTime = this.clockCount;
     this.noteOnEvents = {};
     this.recordedEvents = [];
     this.stopRecordingCallback = callback;
+    this.isRecording = true;
     console.log("starting recording", bars);
     console.log({ current: this });
+
   }
   stopRecording() {
     console.log('stopping recording');
@@ -133,9 +135,10 @@ export default class Sequencer {
 
   }
   private handleRecordingClock() {
+    console.log({ clock: this.clockCount, beat: this.stopRecordingOnBeat, seq: this });
     if (this.stopRecordingOnBeat && this.stopRecordingOnBeat > 0) {
       // should check if recording needs to be stopped
-      if (this.stopRecordingOnBeat >= this.clockCount) {
+      if (this.clockCount >= this.stopRecordingOnBeat) {
         // should stop
         this.stopRecording();
       }
@@ -244,7 +247,7 @@ export default class Sequencer {
     if (!this.isPlaying) {
       return;
     }
-    if (this.stopPlayingOnBeat > 0 && this.stopPlayingOnBeat >= this.stopPlayingOnBeat) {
+    if (this.stopPlayingOnBeat > 0 && this.clockCount >= this.stopPlayingOnBeat) {
       this.stopPlayback();
     }
     const currentTime = this.clockCount - this.startPlayingTime;
@@ -280,6 +283,9 @@ export default class Sequencer {
       case 0xF8:
         // midi clock tick
         this.clockCount++;
+        if (this.clockCount % CLOCKS_PER_BEAT === 0) {
+          console.log(this.clockCount);
+        }
         this.handleBPMCalculation();
         this.handleRecordingClock();
         this.handlePlayback();

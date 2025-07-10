@@ -35,6 +35,7 @@ export class Project implements ProjectI {
   songs: SongI[];
   lastSavePath?: string;
   activeSongId?: string;
+  recordingLength?: number;
   constructor();
   constructor(project?: Partial<ProjectI | Project>);
   constructor(project?: Partial<ProjectI | Project>) {
@@ -45,6 +46,7 @@ export class Project implements ProjectI {
     }
     this.lastSavePath = project?.lastSavePath || undefined;
     this.activeSongId = project?.activeSongId || undefined;
+    this.recordingLength = project?.recordingLength || 12;
   }
   findSongIndex(song: Song) {
     return this.songs.findIndex((e) => e.id === song.id);
@@ -60,6 +62,28 @@ export class Project implements ProjectI {
       return;
     }
     this.songs[index] = { ...this.songs[index], ...song };
+  }
+  deleteSong(song: Partial<Song>) {
+    if (!song.id) {
+      console.error('no song id provided, could not delete');
+      return;
+    }
+    const index = this.findSongIndex(song as Song);
+    if (index < 0) {
+      console.error('could not find song to delete');
+      return;
+    }
+    if (this.activeSongId === song.id) {
+      // change active song
+      if (this.songs.length > 1) {
+        const newSelect = this.songs.slice(index - 1)[0];
+        this.activeSongId = newSelect.id || undefined;
+      } else {
+        this.activeSongId = undefined;
+      }
+    }
+    this.songs.splice(index);
+
   }
 }
 
@@ -118,10 +142,11 @@ export async function updateProject(project: Partial<ProjectI>) {
   const updatedProject = new Project({ ...currentProject, ...project });
   currentProject = updatedProject;
   await updateProjectInAppData(currentProject);
+  return currentProject;
 }
 export async function updateSongInProject(song: Partial<Song>) {
   currentProject.updateSong(song);
-  const updatedProject = { ...currentProject };
+  const updatedProject = new Project({ ...currentProject });
   await updateProjectInAppData(updatedProject);
 }
 // basically new project
@@ -136,9 +161,15 @@ export async function addNewsong() {
   await updateProject(currentProject);
   return currentProject;
 }
+export async function deleteSong(song: Partial<Song>) {
+  currentProject.deleteSong(song);
+  await updateProject(currentProject);
+  return currentProject;
+}
 export async function setActiveSong(id: string) {
   currentProject.activeSongId = id;
   await updateProject(currentProject);
+  return currentProject;
 }
 
 // loads it on boot.

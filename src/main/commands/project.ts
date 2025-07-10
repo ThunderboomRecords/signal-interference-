@@ -1,5 +1,5 @@
 import { ipcMain, ipcRenderer } from 'electron';
-import { addNewsong, getCurrentProject, loadProject, saveProject, setActiveSong, updateProject } from "../app/project";
+import { addNewsong, deleteSong, getCurrentProject, loadProject, saveProject, setActiveSong, updateProject } from "../app/project";
 import { Project, Song } from '../types';
 
 export default function init() {
@@ -8,7 +8,7 @@ export default function init() {
   });
   ipcMain.handle('project:update', (_event, project: Partial<Project>) => {
     console.log('updating project', project);
-    updateProject(project);
+    return updateProject(project);
   });
   ipcMain.handle('project:load', (_event, path: string) => {
     return loadProject(path);
@@ -17,11 +17,13 @@ export default function init() {
     return saveProject(path);
   });
   ipcMain.handle('project:newSong', (_event) => {
-    const newSong = addNewsong();
-    return newSong;
+    const proj = addNewsong();
+    return proj;
+  });
+  ipcMain.handle('project:deleteSong', (_event, song: Partial<Song>) => {
+    return deleteSong(song);
   });
   ipcMain.handle('project:selectSong', (_event, song: Song) => {
-    setActiveSong(song.id);
-    return song;
+    return setActiveSong(song.id);
   });
 }

@@ -9,7 +9,7 @@ import { defineConfig } from "vite";
 import { app, BrowserWindow } from "electron";
 import fs from 'fs/promises';
 import { SETTINGS_FILENAME } from "../constants";
-import { getCurrentProject, getCurrentSong, updateProject, updateSongInProject } from "./project";
+import { getCurrentProject, getCurrentSong, setActiveSong, updateProject, updateSongInProject } from "./project";
 import { getSongFromId } from "../helpers";
 
 let generatedOutput: NoteEvent[] = [];
@@ -50,16 +50,17 @@ function recordingCallback(notes: NoteEvent[]) {
   console.log('stopped recording', currentSong);
   updateSongInProject(currentSong);
 }
-export function startRecording() {
+export function startRecording(amountOfBars?: number) {
   const currentSong = getCurrentSong();
+  const project = getCurrentProject();
   if (!currentSong) {
     console.error('no song selected for recording');
     return;
   }
-  console.log({ currentSong: JSON.stringify(currentSong, null, 2) });
-
-  console.log(sequencer);
-  sequencer.startRecording(currentSong?.generationOptions?.barsToGenerate || 1, recordingCallback);
+  const recordingLength = amountOfBars || project.recordingLength;
+  project.recordingLength = recordingLength;
+  updateProject(project);
+  sequencer.startRecording(recordingLength, recordingCallback);
 }
 
 export function startPlayback() {
@@ -93,6 +94,15 @@ export function generate(bars: number) {
 }
 
 
+function switchSong(value: number) {
+  const proj = getCurrentProject();
+  const song = proj.songs.find((song) => song.midiSelection.value === value);
+  if (song) {
+    setActiveSong(song.id);
+  } else {
+    console.error('could not set song', value);
+  }
+}
 
 function registerCallbacks() {
   // cc messages from 16 to 63 are generally free for custom use.
@@ -112,6 +122,7 @@ function registerCallbacks() {
   // TODO: 41 for selecting generative base for now defaults to recorded thing
   sequencer.setCCCallback(48, (_cc, _data) => { startPlayback(); })
   sequencer.setCCCallback(49, (_cc, _data) => { stopPlayback(); })
+  sequencer.setCCCallback(56, (_cc, data) => { switchSong(data); })
 }
 
 export function init() {

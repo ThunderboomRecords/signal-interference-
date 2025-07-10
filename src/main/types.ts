@@ -48,4 +48,5 @@ export interface Project {
   songs: Song[];
   lastSavePath?: string;
   activeSongId?: string,
+  recordingLength?: number;
 }

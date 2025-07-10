@@ -40,6 +40,7 @@ const ipcApi = {
     save: (path: string) => ipcRenderer.invoke('project:save', path),
     addNewsong: () => ipcRenderer.invoke('project:newSong'),
     selectSong: (song: Song) => ipcRenderer.invoke('project:selectSong', song),
+    deleteSong: (song: Partial<Song>) => ipcRenderer.invoke('project:deleteSong', song),
   }
 
 }
