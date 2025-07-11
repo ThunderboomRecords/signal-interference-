@@ -5,26 +5,16 @@ import './index.css';
 import { GenerationStemData, Song, TrainingData } from 'src/main/types';
 import { addNewsong, Project } from 'src/main/app/project';
 import useProject from '../lib/projectHook';
-
-const initSong: Song = {
-  name: '',
-  trainingData: [] as TrainingData[],
-  beatsPerBar: 4,
-  stemData: [] as GenerationStemData[],
-  midiSelection: { cc: 56, value: 0, },
-  generationOptions: {
-    order: 12,
-    length: 12,
-  }
-}
+import crypto from 'crypto';
 
 function RenderSongs(props: {
   songs: Song[],
   selectSong: (song: Song) => void,
   activeSongId: string,
-  onChange: (songs: Song[]) => void
+  onChange: (songs: Song[]) => void,
+  onDelete: (song: Partial<Song>) => void,
 }) {
-  const { songs, selectSong, activeSongId, onChange } = props;
+  const { songs, selectSong, activeSongId, onChange, onDelete } = props;
 
   return (
     <>
@@ -35,6 +25,7 @@ function RenderSongs(props: {
             song={song}
             selected={activeSongId === song.id}
             onSelect={() => selectSong(song)}
+            onDelete={onDelete}
             onChange={(e) => {
               const newSongs = [...songs];
               newSongs[index] = { ...newSongs[index], ...e };
@@ -74,6 +65,7 @@ export default function Songs() {
             onChange={(songs) => {
               updateSongs(songs);
             }}
+            onDelete={(song: Partial<Song>) => { deleteSong(song); }}
           />
         </tbody>
         <tfoot>

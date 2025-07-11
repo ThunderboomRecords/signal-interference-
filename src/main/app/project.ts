@@ -93,7 +93,6 @@ let currentProject = new Project();
 
 async function updateProjectInAppData(project: ProjectI) {
   const appDataPath = app.getPath('appData');
-  console.log({ appDataPath });
   const projectPath = path.join(appDataPath, ACTIVE_PROJECT_APP_DATA_FILENAME);
   const data = JSON.stringify(project, null, 0);
   try {
@@ -138,10 +137,9 @@ export async function loadProject(path: string) {
 }
 
 
-export async function updateProject(project: Partial<ProjectI>) {
+export async function updateProject(project: Project) {
   // can do a partial update
-  const updatedProject = new Project({ ...currentProject, ...project });
-  currentProject = updatedProject;
+  currentProject = new Project(project);
   await updateProjectInAppData(currentProject);
   return currentProject;
 }

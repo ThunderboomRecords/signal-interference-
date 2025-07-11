@@ -86,9 +86,9 @@ export default function SongBar(props: {
   selected: boolean,
   onSelect?: (song: Song) => void,
   onChange?: (song: Song) => void,
-  onDelete?: (song: Song) => void,
+  onDelete?: (song: Partial<Song>) => void,
 }) {
-  const { song, selected, onSelect, onChange } = props;
+  const { song, selected, onSelect, onChange, onDelete } = props;
 
   const trainingFileNames = song.trainingData.map((fileName) => fileName.name.split(/[\\/]/).slice(-1)[0]);
 
@@ -166,7 +166,7 @@ export default function SongBar(props: {
 
       </td>
       <td>
-        <DeleteButton onClick={() => { console.log('should delete') }} />
+        <DeleteButton onClick={() => { onDelete(song) }} />
       </td>
     </tr>
   )
