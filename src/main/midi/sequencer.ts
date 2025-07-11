@@ -135,12 +135,10 @@ export default class Sequencer {
     this.recording.recordedEvents = [];
     this.recording.stopRecordingCallback = callback;
     this.recording.isRecording = true;
-    this.registerRecordingCallback();
   }
   stopRecording() {
     this.recording.stopRecordingOnBeat = -1;
     this.recording.isRecording = false;
-    this.registerRecordingCallback();
     if (this.recording.stopRecordingCallback) {
       this.recording.stopRecordingCallback([...this.recording.recordedEvents]);
     }
@@ -295,13 +293,12 @@ export default class Sequencer {
     const [command, cc, data] = message;
 
     if ((command & 0xF0) === 0xB0) {
-      console.log(this.ccEventsBuffer.get(cc));
       if (this.ccEventsBuffer.get(cc) === data) {
         // only respond to changes
         return;
       }
       this.ccEventsBuffer.set(cc, data);
-      if (this.ccCallbacks[cc]) {
+      if (data > 0 && this.ccCallbacks[cc]) {
         console.log(message);
         this.ccCallbacks[cc](cc, data);
       }
