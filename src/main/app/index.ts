@@ -125,13 +125,14 @@ export function generate(amountOfBars?: number) {
 }
 
 
-function switchSong(value: number) {
+async function switchSong(value: number) {
   const proj = getCurrentProject();
   console.log('trying to set song', value);
   const song = proj.songs.find((song) => song.midiSelection.value === value);
   if (song) {
     console.log('setting song', song)
-    setActiveSong(song.id);
+    await setActiveSong(song.id);
+    sendProjectUpdateToRenderer();
   } else {
     console.error('could not set song', value);
   }
