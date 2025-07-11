@@ -4,11 +4,12 @@ import { ApplicationSettings, NoteEvent, Song } from "../types";
 import HigherOrderMarkovChain from "../markov/model";
 import { parseMidiFile } from "../midi/fileIO";
 import * as path from 'path'
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, dialog } from "electron";
 import fs from 'fs/promises';
 import { SETTINGS_FILENAME } from "../constants";
 import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setActiveSong, updateProject, updateSongInProject } from "./project";
 import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording, getSongFromId } from "../helpers";
+import { createPortal } from "react-dom";
 export { loadProject, createProject, saveProject } from './project';
 
 let generatedOutput: NoteEvent[] = [];
@@ -23,6 +24,15 @@ export function stopRecording() {
   mainWindow.webContents.send('sequencer:recordingStatus', false);
 }
 
+function sendProjectUpdateToRenderer() {
+  const currentProject = getCurrentProject();
+  mainWindow.webContents.send('project:onUpdate', currentProject);
+}
+
+export async function newProject() {
+  await createProject();
+  sendProjectUpdateToRenderer();
+}
 function recordingCallback(notes: NoteEvent[]) {
   // save current recording 
   if (!notes) {
@@ -76,10 +86,14 @@ export function stopPlayback() {
   mainWindow?.webContents.send('sequencer:playbackStatus', false);
 }
 
-export function generate() {
+export function generate(amountOfBars?: number) {
   //const maxOrder = getNotesPerBar(generativeInput, sequencer.beatsPerBar).reduce((max: number, e: number) => (e > max ? e : max), 0);
   console.log('starting to generate');
   const currentSong = getCurrentSong();
+  if (amountOfBars !== undefined) {
+    currentSong.generationOptions.barsToGenerate = amountOfBars;
+    updateSongInProject(currentSong);
+  }
   const bars = currentSong.generationOptions.barsToGenerate || 12;
   const latestRecording = getLatestRecording(currentSong) || [];
   const defaultInput = currentSong.trainingData.slice(-1)[0].notes;
@@ -264,3 +278,30 @@ export function registerMainWindow(window: BrowserWindow) {
   mainWindow = window;
 }
 
+export async function openProjectWithDialog() {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: 'Please open a project',
+    filters: [
+      {
+        extensions: ['json'],
+        name: 'json',
+      }
+    ]
+  });
+
+  if (!canceled && filePaths.length > 0) {
+    const projectFilePath = filePaths[0];
+    const project = await loadProject(projectFilePath);
+    sendProjectUpdateToRenderer();
+    return project;
+  }
+  return undefined;
+}
+export async function saveProjectWithDialog() {
+  const { filePath } = await dialog.showSaveDialog({
+    title: 'Save Project',
+    defaultPath: 'project.json',
+    filters: [{ name: 'JSON Files', extensions: ['json'] }],
+  });
+  saveProject(filePath);
+}

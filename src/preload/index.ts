@@ -53,6 +53,10 @@ const ipcApi = {
     addNewsong: () => ipcRenderer.invoke('project:newSong'),
     selectSong: (song: Partial<Song>) => ipcRenderer.invoke('project:selectSong', song),
     deleteSong: (song: Partial<Song>) => ipcRenderer.invoke('project:deleteSong', song),
+    onProjectChange: (callback: (project: Project) => void) => ipcRenderer.on(
+      'project:onUpdate',
+      (_event, project) => callback(project)
+    ),
   }
 
 }

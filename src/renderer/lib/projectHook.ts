@@ -8,6 +8,9 @@ export default function useProject() {
     window.electronApi.project.getCurrent().then((val: Project) => {
       setProject(val);
     });
+    window.electronApi.project.onProjectChange((proj) => {
+      setProject(proj);
+    });
   }, []);
   useEffect(() => {
     console.log({ project });

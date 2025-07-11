@@ -34,33 +34,19 @@ const createWindow = () => {
         {
           label: 'New Project',
           click: () => {
-            mainApp.createProject();
+            mainApp.newProject();
           },
         },
         {
           label: 'Save Project',
           click: async () => {
-            const { filePath } = await mainWindow.webContents.executeJavaScript(`require('electron').dialog.showSaveDialog({
-              title: 'Save Project',
-              defaultPath: 'project.json',
-              filters: [{ name: 'JSON Files', extensions: ['json'] }],
-            })`);
-            if (filePath) {
-              mainApp.saveProject(filePath);
-            }
+            mainApp.saveProjectWithDialog();
           },
         },
         {
           label: 'Load Project',
           click: async () => {
-            const { filePaths } = await mainWindow.webContents.executeJavaScript(`require('electron').dialog.showOpenDialog({
-              title: 'Load Project',
-              filters: [{ name: 'JSON Files', extensions: ['json'] }],
-              properties: ['openFile']
-            })`);
-            if (filePaths && filePaths.length > 0) {
-              mainApp.loadProject(filePaths[0]);
-            }
+            mainApp.openProjectWithDialog();
           },
         },
       ],

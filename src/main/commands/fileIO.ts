@@ -1,4 +1,5 @@
 import { dialog, ipcMain, ipcRenderer } from "electron";
+import { loadProject } from "../app";
 import { parseMidiFile } from "../midi/fileIO";
 import { NoteEvent } from '../types';
 
@@ -36,6 +37,7 @@ async function handleFileOpen() {
   }
   return output;
 }
+
 export function init() {
   ipcMain.handle('dialog:openFile', handleFileOpen);
 }

@@ -21,7 +21,7 @@ function RenderSongs(props: {
       {
         songs.map((song, index) => (
           <SongComponent
-            key={index}
+            key={song.id}
             song={song}
             selected={activeSongId === song.id}
             onSelect={() => selectSong(song)}
