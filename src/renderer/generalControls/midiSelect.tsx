@@ -50,6 +50,7 @@ function SingleSelector(props: {
   currentInput?: string;
 }) {
   const { inputList, labelName, selectCallback, updateContent, currentInput } = props;
+  console.log({ currentInput });
   return (
     <div className="midi-selector">
       <label>
@@ -90,6 +91,7 @@ export default function MidiSelect() {
       setMidiOutput(value.name);
     });
     window.electronApi.midiConfiguration.onMidiDawInput((value: MidiInterfaceInfo) => {
+      console.log(value);
       setDawInput(value.name);
     });
   }, []);

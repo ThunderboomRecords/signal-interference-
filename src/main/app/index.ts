@@ -33,7 +33,7 @@ export async function newProject() {
   await createProject();
   sendProjectUpdateToRenderer();
 }
-function recordingCallback(notes: NoteEvent[]) {
+async function recordingCallback(notes: NoteEvent[]) {
   // save current recording 
   if (!notes) {
     console.log(notes);
@@ -50,7 +50,9 @@ function recordingCallback(notes: NoteEvent[]) {
   });
   console.log('stopped recording', currentSong);
   mainWindow.webContents.send('sequencer:recordingStatus', false);
-  updateSongInProject(currentSong);
+
+  await updateSongInProject(currentSong);
+  sendProjectUpdateToRenderer();
 
 }
 export function startRecording(amountOfBars?: number) {
@@ -86,7 +88,7 @@ export function stopPlayback() {
   mainWindow?.webContents.send('sequencer:playbackStatus', false);
 }
 
-export function generate(amountOfBars?: number) {
+export async function generate(amountOfBars?: number) {
   //const maxOrder = getNotesPerBar(generativeInput, sequencer.beatsPerBar).reduce((max: number, e: number) => (e > max ? e : max), 0);
   console.log('starting to generate');
   const currentSong = getCurrentSong();
@@ -121,8 +123,10 @@ export function generate(amountOfBars?: number) {
   console.log({ generated });
   generatedOutput = [...generated];
   const newSong = addNewGeneratedData(currentSong, generatedOutput);
-  updateSongInProject(newSong);
+  await updateSongInProject(newSong);
+  sendProjectUpdateToRenderer();
 }
+
 
 
 async function switchSong(value: number) {
@@ -204,15 +208,16 @@ export async function writeSettingsToDisk(settings: ApplicationSettings) {
 
 type settingsCommand = (input: string, window: BrowserWindow) => void;
 const settingCommands: { [setting: string]: settingsCommand } = {
-  dawInput: (clockInput: string, window: BrowserWindow) => {
-    const clockNo = getMidiPortNumberByName(clockInput, 'input');
-    if (clockNo < 0) {
+  dawInput: (dawInput: string, window: BrowserWindow) => {
+    const dawNo = getMidiPortNumberByName(dawInput, 'input');
+    if (dawNo < 0) {
       // no input could be found
       return;
     }
     // update clock
-    setDawInput(clockNo);
-    window.webContents.send('midi:midi:currentDawInput', { name: clockInput, index: clockNo });
+    setDawInput(dawNo);
+    console.log('sending setting currentDawInput', { name: dawInput, index: dawNo });
+    window.webContents.send('midi:midi:currentDawInput', { name: dawInput, index: dawNo });
   },
 
   midiInput: (midiInput: string, window: BrowserWindow) => {

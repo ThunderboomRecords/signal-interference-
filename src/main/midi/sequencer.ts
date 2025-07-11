@@ -60,10 +60,10 @@ export default class Sequencer {
   ccEventsBuffer: Map<number, number>;
 
   constructor(dawInput: Midi.Input, recordingInput: Midi.Input, output: Midi.Output) {
-    this.dawInput = dawInput;
-    this.recordingInput = recordingInput;
-    this.noteOutput = output;
-    this.registerRecordingCallback();
+    // this.dawInput = dawInput;
+    // this.recordingInput = recordingInput;
+    // this.noteOutput = output;
+    // this.registerRecordingCallback();
     this.beatTimes = [];
     this.clockCount = 0;
     this.bpm = undefined;
@@ -116,7 +116,6 @@ export default class Sequencer {
   setRecordingInput(recordingInput: Midi.Input) {
     if (this.recordingInput !== recordingInput) {
       this.recordingInput = recordingInput;
-
       this.recordingInput.on('message', (_deltaTime: number, message: Midi.MidiMessage) => {
         this.handleNoteRecordingInput(message);
       });
@@ -191,6 +190,7 @@ export default class Sequencer {
     const command = status & 0xF0;
 
 
+    console.log({ message });
     if (!this.recording.isRecording) {
       return
     }

@@ -16,6 +16,7 @@ export class MidiIO {
   }
   setDawPort(dawId: number | string) {
     this.dawInput.closePort();
+
     if (typeof dawId === 'string') {
       dawId = getMidiPortNumberByName(dawId, 'input');
     }

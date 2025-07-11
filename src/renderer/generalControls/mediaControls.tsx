@@ -44,7 +44,6 @@ export default function MediaControls() {
         className={`${isRecording && 'active-button'}`}
         onClick={(e) => {
           e.preventDefault();
-          console.log({ isRecording })
           if (isRecording) {
             // should stop recording
             stopRecording();
