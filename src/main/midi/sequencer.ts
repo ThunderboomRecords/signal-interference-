@@ -63,6 +63,7 @@ export default class Sequencer {
     this.dawInput = dawInput;
     this.recordingInput = recordingInput;
     this.noteOutput = output;
+    this.registerRecordingCallback();
     this.beatTimes = [];
     this.clockCount = 0;
     this.bpm = undefined;
@@ -99,21 +100,27 @@ export default class Sequencer {
     // TODO: check if it needs to make sense to open and close ports in here.
   }
   private registerRecordingCallback() {
+    console.log('registering callback');
     this.dawInput.on('message', (_deltaTime: number, message: Midi.MidiMessage) => {
       this.handleDawInput(message);
     });
   }
 
-  setDawInput(clock: Midi.Input) {
-    this.dawInput = clock;
-    this.registerRecordingCallback();
+  setDawInput(dawInput: Midi.Input) {
+    if (this.dawInput !== dawInput) {
+      this.dawInput = dawInput;
+      this.registerRecordingCallback();
+    }
   }
 
   setRecordingInput(recordingInput: Midi.Input) {
-    this.recordingInput = recordingInput;
-    this.recordingInput.on('message', (_deltaTime: number, message: Midi.MidiMessage) => {
-      this.handleNoteRecordingInput(message);
-    });
+    if (this.recordingInput !== recordingInput) {
+      this.recordingInput = recordingInput;
+
+      this.recordingInput.on('message', (_deltaTime: number, message: Midi.MidiMessage) => {
+        this.handleNoteRecordingInput(message);
+      });
+    }
   }
   setOutput(output: Midi.Output) {
     this.noteOutput = output;
@@ -293,10 +300,10 @@ export default class Sequencer {
     const [command, cc, data] = message;
 
     if ((command & 0xF0) === 0xB0) {
-      if (this.ccEventsBuffer.get(cc) === data) {
-        // only respond to changes
-        return;
-      }
+      // if (this.ccEventsBuffer.get(cc) === data) {
+      //   // only respond to changes
+      //   return;
+      // }
       this.ccEventsBuffer.set(cc, data);
       if (data > 0 && this.ccCallbacks[cc]) {
         console.log(message);
