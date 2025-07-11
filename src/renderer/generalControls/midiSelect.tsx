@@ -6,6 +6,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
+import { setDawInput } from "src/main/app";
 import { MidiInterfaceInfo } from "src/main/types";
 import './index.css';
 
@@ -69,7 +70,7 @@ function SingleSelector(props: {
 // TODO: Add history for this so it remembers the configuration and default io config
 export default function MidiSelect() {
   const [midiIO, setMidiIO] = useState<{ input: string[], output: string[] }>({ input: [], output: [] });
-  const [currentClockInput, setClockInput] = useState<string | undefined>(undefined);
+  const [currentDawInput, setDawInput] = useState<string | undefined>(undefined);
   const [currentMidiInput, setMidiInput] = useState<string | undefined>(undefined);
   const [currentMidiOutput, setMidiOutput] = useState<string | undefined>(undefined);
 
@@ -88,21 +89,22 @@ export default function MidiSelect() {
     window.electronApi.midiConfiguration.onMidiOutput((value: MidiInterfaceInfo) => {
       setMidiOutput(value.name);
     });
-    window.electronApi.midiConfiguration.onMidiClock((value: MidiInterfaceInfo) => {
-      setClockInput(value.name);
+    window.electronApi.midiConfiguration.onMidiDawInput((value: MidiInterfaceInfo) => {
+      setDawInput(value.name);
     });
   }, []);
 
   return (
     <>
       <SingleSelector
-        currentInput={currentClockInput}
+        currentInput={currentDawInput}
         inputList={midiIO.input}
-        labelName="Clock"
+        labelName="Daw"
         updateContent={getContents}
         selectCallback={(id) => {
-          window.electronApi.updateSetting('clockInput', id).then((e) => {
-            setClockInput(e.clockInput);
+          window.electronApi.updateSetting('dawInput', id).then((e) => {
+
+            setDawInput(e.dawInput);
           });
         }}
       />
@@ -114,6 +116,7 @@ export default function MidiSelect() {
         updateContent={getContents}
         selectCallback={(id) => {
           window.electronApi.updateSetting('midiInput', id).then((e) => {
+            console.log({ e });
             setMidiInput(e.midiInput);
           });
         }}

@@ -3,7 +3,7 @@ import { Note } from "@tonejs/midi/dist/Note";
 export type NoteEvent = { note: number; deltaTime: number; duration: number };
 
 export interface ApplicationSettings {
-  clockInput?: string;
+  dawInput?: string;
   midiInput?: string;
   midiOutput?: string;
 }

@@ -7,13 +7,14 @@ import * as path from 'path'
 import { app, BrowserWindow } from "electron";
 import fs from 'fs/promises';
 import { SETTINGS_FILENAME } from "../constants";
-import { getCurrentProject, getCurrentSong, setActiveSong, updateProject, updateSongInProject } from "./project";
+import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setActiveSong, updateProject, updateSongInProject } from "./project";
 import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording, getSongFromId } from "../helpers";
+export { loadProject, createProject, saveProject } from './project';
 
 let generatedOutput: NoteEvent[] = [];
 const DEFAULT_MAX_ORDER = 12;
 
-const sequencer = new Sequencer(midiPorts.getClockPort(), midiPorts.getInputPort(), midiPorts.getOutputPort());
+const sequencer = new Sequencer(midiPorts.getDawPort(), midiPorts.getInputPort(), midiPorts.getOutputPort());
 
 let recordedNotes: NoteEvent[] = [];
 
@@ -132,7 +133,8 @@ function registerCallbacks() {
   // 56: Song switching // TODO
   // FIXME: Panic or kill button
   sequencer.setCCCallback(16, (_cc, data) => { sequencer.setBeatsPerBar(data) });
-  sequencer.setCCCallback(32, (_cc, data) => { startRecording(data); });
+  sequencer.setCCCallback(31, (_cc, data) => { startRecording(data); });
+  // Note 32 does not work for ableton for some reason
   sequencer.setCCCallback(33, (_cc, _data) => { stopRecording(); });
   sequencer.setCCCallback(40, (_cc, data) => { generate(data) });
   // TODO: 41 for selecting generative base for now defaults to recorded thing
@@ -146,18 +148,21 @@ export function init(window: BrowserWindow) {
   registerMainWindow(window);
 }
 
-export function setClockInput(port: number | string) {
+export function setDawInput(port: number | string) {
   console.log('setting clock input', port);
-  midiPorts.setClockPort(port);
-  sequencer.setClockInput(midiPorts.getClockPort());
+  midiPorts.setDawPort(port);
+  sequencer.setDawInput(midiPorts.getDawPort());
+  return port;
 }
 export function setRecordingInput(port: number | string) {
   midiPorts.setInputPort(port);
   sequencer.setRecordingInput(midiPorts.getInputPort());
+  return port;
 }
 export function setMidiOutput(port: number | string) {
   midiPorts.setOutputPort(port);
   sequencer.setOutput(midiPorts.getOutputPort());
+  return port;
 }
 
 export async function loadSettingsFromDisk(): Promise<ApplicationSettings> {
@@ -182,15 +187,15 @@ export async function writeSettingsToDisk(settings: ApplicationSettings) {
 
 type settingsCommand = (input: string, window: BrowserWindow) => void;
 const settingCommands: { [setting: string]: settingsCommand } = {
-  clockInput: (clockInput: string, window: BrowserWindow) => {
+  dawInput: (clockInput: string, window: BrowserWindow) => {
     const clockNo = getMidiPortNumberByName(clockInput, 'input');
     if (clockNo < 0) {
       // no input could be found
       return;
     }
     // update clock
-    setClockInput(clockNo);
-    window.webContents.send('midi:currentClockInput', { name: clockInput, index: clockNo });
+    setDawInput(clockNo);
+    window.webContents.send('midi:midi:currentDawInput', { name: clockInput, index: clockNo });
   },
 
   midiInput: (midiInput: string, window: BrowserWindow) => {
@@ -238,7 +243,7 @@ export async function loadSettings(window: BrowserWindow) {
 }
 
 const updateSettingFunctions: Record<keyof ApplicationSettings, (value: string) => void> = {
-  clockInput: setClockInput,
+  dawInput: setDawInput,
   midiInput: setRecordingInput,
   midiOutput: setMidiOutput,
 }
@@ -251,7 +256,6 @@ export async function updateSetting(key: keyof ApplicationSettings, value: strin
   if (updateSettingFunctions[key]) {
     updateSettingFunctions[key](value);
   }
-  writeSettingsToDisk(newSettings);
   return newSettings;
 }
 
@@ -259,3 +263,4 @@ let mainWindow: undefined | BrowserWindow = undefined;
 export function registerMainWindow(window: BrowserWindow) {
   mainWindow = window;
 }
+

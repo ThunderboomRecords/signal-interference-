@@ -25,7 +25,7 @@ interface ScheduledNote {
 }
 export default class Sequencer {
   // inputs
-  clockInput: Midi.Input;
+  dawInput: Midi.Input;
   recordingInput: Midi.Input;
   noteOutput: Midi.Output;
   // beat tracking
@@ -57,9 +57,10 @@ export default class Sequencer {
 
   // Control messages
   ccCallbacks: { [command: number]: CCCallback };
+  ccEventsBuffer: Map<number, number>;
 
-  constructor(clock: Midi.Input, recordingInput: Midi.Input, output: Midi.Output) {
-    this.clockInput = clock;
+  constructor(dawInput: Midi.Input, recordingInput: Midi.Input, output: Midi.Output) {
+    this.dawInput = dawInput;
     this.recordingInput = recordingInput;
     this.noteOutput = output;
     this.beatTimes = [];
@@ -88,22 +89,23 @@ export default class Sequencer {
 
     // callbacks
     this.ccCallbacks = {};
+    this.ccEventsBuffer = new Map<number, number>();
 
     this.setRecordingInput(recordingInput);
-    this.setClockInput(clock);
+    this.setDawInput(dawInput);
     this.setOutput(output);
   }
   destructor() {
     // TODO: check if it needs to make sense to open and close ports in here.
   }
   private registerRecordingCallback() {
-    this.clockInput.on('message', (_deltaTime: number, message: Midi.MidiMessage) => {
-      this.handleClockInput(message);
+    this.dawInput.on('message', (_deltaTime: number, message: Midi.MidiMessage) => {
+      this.handleDawInput(message);
     });
   }
 
-  setClockInput(clock: Midi.Input) {
-    this.clockInput = clock;
+  setDawInput(clock: Midi.Input) {
+    this.dawInput = clock;
     this.registerRecordingCallback();
   }
 
@@ -142,7 +144,7 @@ export default class Sequencer {
     if (this.recording.stopRecordingCallback) {
       this.recording.stopRecordingCallback([...this.recording.recordedEvents]);
     }
-
+    this.ccEventsBuffer = new Map<number, number>();
   }
   private handleRecordingClock() {
     if (this.recording.stopRecordingOnBeat && this.recording.stopRecordingOnBeat > 0) {
@@ -183,12 +185,6 @@ export default class Sequencer {
     const [status, note, velocity] = message;
     const command = status & 0xF0;
 
-    if (command === 0xB0) {
-      const [_cmd, cc, data] = message;
-      if (this.ccCallbacks[cc]) {
-        this.ccCallbacks[cc](cc, data);
-      }
-    }
 
     if (!this.recording.isRecording) {
       return
@@ -295,8 +291,21 @@ export default class Sequencer {
       this.bpm = calculateBPM(this.beatTimes);
     }
   }
-  handleClockInput(message: Midi.MidiMessage) {
-    const [command] = message;
+  handleDawInput(message: Midi.MidiMessage) {
+    const [command, cc, data] = message;
+
+    if ((command & 0xF0) === 0xB0) {
+      console.log(this.ccEventsBuffer.get(cc));
+      if (this.ccEventsBuffer.get(cc) === data) {
+        // only respond to changes
+        return;
+      }
+      this.ccEventsBuffer.set(cc, data);
+      if (this.ccCallbacks[cc]) {
+        console.log(message);
+        this.ccCallbacks[cc](cc, data);
+      }
+    }
     switch (command) {
       case 0xF8:
         // midi clock tick

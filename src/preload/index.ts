@@ -8,13 +8,13 @@ type MidiInterfaceCallback = (info: MidiInterfaceInfo) => void;
 
 const ipcApi = {
   midiConfiguration: {
-    setClock: (midiClockId: number) => ipcRenderer.send('midi:setClock', midiClockId),
+    setDawInput: (midiDawInput: number) => ipcRenderer.send('midi:setDawInput', midiDawInput),
     setInputChannel: (midiInput: number) => ipcRenderer.send('midi:setInput', midiInput),
     setOutputChannel: (midiOutput: number) => ipcRenderer.send('midi:setOutput', midiOutput),
     // invoking
     getMidiInputs: () => ipcRenderer.invoke('midi:getPorts'),
-    onMidiClock: (callback: MidiInterfaceCallback) => {
-      ipcRenderer.on('midi:currentClockInput', (_event, value) => { callback(value); });
+    onMidiDawInput: (callback: MidiInterfaceCallback) => {
+      ipcRenderer.on('midi:currentDawInput', (_event, value) => { callback(value); });
     },
     onMidiInput: (callback: MidiInterfaceCallback) => {
       ipcRenderer.on('midi:currentMidiInput', (_event, value) => { callback(value); });

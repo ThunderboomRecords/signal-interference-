@@ -160,9 +160,13 @@ const config: ForgeConfig = {
     // if applicable, your other config / options / app info
 
     overwrite: true,
+    arch: ['x64', 'arm64'],
   },
-  rebuildConfig: {},
+  rebuildConfig: {
+    // force: true,
+  },
   makers: [new MakerSquirrel({}), new MakerZIP({}, ['darwin']), new MakerRpm({}), new MakerDeb({})],
+
   plugins: [
     new VitePlugin({
       // `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.

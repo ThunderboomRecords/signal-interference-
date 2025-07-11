@@ -1,6 +1,6 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Menu } from 'electron';
 import path from 'node:path';
-import started from 'electron-squirrel-startup';
+import started from 'electron-squirrel-startup'; // eslint-disable-line @typescript-eslint/no-var-requires
 import initCommands from './commands';
 import * as mainApp from './app';
 
@@ -27,6 +27,48 @@ const createWindow = () => {
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
+  const menuTemplate = [
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'New Project',
+          click: () => {
+            mainApp.createProject();
+          },
+        },
+        {
+          label: 'Save Project',
+          click: async () => {
+            const { filePath } = await mainWindow.webContents.executeJavaScript(`require('electron').dialog.showSaveDialog({
+              title: 'Save Project',
+              defaultPath: 'project.json',
+              filters: [{ name: 'JSON Files', extensions: ['json'] }],
+            })`);
+            if (filePath) {
+              mainApp.saveProject(filePath);
+            }
+          },
+        },
+        {
+          label: 'Load Project',
+          click: async () => {
+            const { filePaths } = await mainWindow.webContents.executeJavaScript(`require('electron').dialog.showOpenDialog({
+              title: 'Load Project',
+              filters: [{ name: 'JSON Files', extensions: ['json'] }],
+              properties: ['openFile']
+            })`);
+            if (filePaths && filePaths.length > 0) {
+              mainApp.loadProject(filePaths[0]);
+            }
+          },
+        },
+      ],
+    },
+  ];
+
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
 
   // Open theDevTools.
   mainWindow.webContents.openDevTools();

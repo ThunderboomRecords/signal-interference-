@@ -1,30 +1,30 @@
 import midi from 'midi';
 
 export class MidiIO {
-  clockInput: midi.Input;
+  dawInput: midi.Input;
   noteInput: midi.Input;
   outputPort: midi.Output;
   constructor() {
-    this.clockInput = new midi.Input(); // also DAW input
+    this.dawInput = new midi.Input(); // also DAW input
     this.noteInput = new midi.Input();
     this.outputPort = new midi.Output();
   }
   destructor() {
-    this.clockInput.closePort();
+    this.dawInput.closePort();
     this.noteInput.closePort();
     this.outputPort.closePort();
   }
-  setClockPort(clockId: number | string) {
-    this.clockInput.closePort();
-    if (typeof clockId === 'string') {
-      clockId = getMidiPortNumberByName(clockId, 'input');
+  setDawPort(dawId: number | string) {
+    this.dawInput.closePort();
+    if (typeof dawId === 'string') {
+      dawId = getMidiPortNumberByName(dawId, 'input');
     }
-    if (clockId < 0) {
+    if (dawId < 0) {
       // disables port
       return;
     }
-    this.clockInput.openPort(clockId);
-    this.clockInput.ignoreTypes(false, false, false);
+    this.dawInput.openPort(dawId);
+    this.dawInput.ignoreTypes(false, false, false);
   }
 
   setInputPort(inputId: number | string) {
@@ -51,8 +51,8 @@ export class MidiIO {
     this.outputPort.openPort(outputId);
   }
 
-  getClockPort() {
-    return this.clockInput;
+  getDawPort() {
+    return this.dawInput;
   }
   getInputPort() {
     return this.noteInput;
