@@ -137,9 +137,9 @@ export async function loadProject(path: string) {
 }
 
 
-export async function updateProject(project: Project) {
+export async function updateProject(project: Partial<ProjectI | Project>) {
   // can do a partial update
-  currentProject = new Project(project);
+  currentProject = new Project({ ...currentProject, ...project });
   await updateProjectInAppData(currentProject);
   return currentProject;
 }
