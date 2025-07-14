@@ -14,6 +14,7 @@ export { loadProject, createProject, saveProject } from './project';
 
 let generatedOutput: NoteEvent[] = [];
 const DEFAULT_MAX_ORDER = 12;
+const DEFAULT_BAR_AMOUNT = 12;
 
 const sequencer = new Sequencer(midiPorts.getDawPort(), midiPorts.getInputPort(), midiPorts.getOutputPort());
 
@@ -92,14 +93,20 @@ export async function generate(amountOfBars?: number) {
   //const maxOrder = getNotesPerBar(generativeInput, sequencer.beatsPerBar).reduce((max: number, e: number) => (e > max ? e : max), 0);
   console.log('starting to generate');
   const currentSong = getCurrentSong();
+  console.log({ currentSong });
   if (amountOfBars !== undefined) {
-    currentSong.generationOptions.barsToGenerate = amountOfBars;
+    if (!currentSong.generationOptions) {
+      currentSong.generationOptions = { order: DEFAULT_MAX_ORDER, barsToGenerate: DEFAULT_BAR_AMOUNT };
+    } else {
+      currentSong.generationOptions.barsToGenerate = amountOfBars;
+    }
     updateSongInProject(currentSong);
   }
-  const bars = currentSong.generationOptions.barsToGenerate || 12;
+  const bars = currentSong?.generationOptions?.barsToGenerate || DEFAULT_BAR_AMOUNT;
   const latestRecording = getLatestRecording(currentSong) || [];
   const defaultInput = currentSong.trainingData.slice(-1)[0].notes;
-  const maxOrder = DEFAULT_MAX_ORDER;
+  const maxOrder = currentSong.generationOptions.order;
+  console.log({ maxOrder });
 
   let startSequence: NoteEvent[] = [];
   if (latestRecording && latestRecording.length >= maxOrder) {
@@ -112,6 +119,7 @@ export async function generate(amountOfBars?: number) {
       generativeInput: latestRecording.length,
       defaultInput: defaultInput.length,
       startSequence: startSequence.length,
+
     }
   });
   const barsToGenerate = bars;
@@ -120,7 +128,13 @@ export async function generate(amountOfBars?: number) {
     markov.addSequence(data.notes);
   })
   const generated = markov.generateBarsFuzzy(startSequence, barsToGenerate, sequencer.beatsPerBar);
-  console.log({ generated });
+
+  // Count the unique numbers in markov.transitions
+  const uniqueNumbersCount = markov.countDifferentNumbersInTransitions();
+  console.log(`Unique numbers in transitions: ${uniqueNumbersCount}`);
+  console.log({ transitionMapSize: markov.transitions.size, inputSize: currentSong.trainingData[0].notes.length });
+
+  // analyse the markov thins
   generatedOutput = [...generated];
   const newSong = addNewGeneratedData(currentSong, generatedOutput);
   await updateSongInProject(newSong);

@@ -13,11 +13,9 @@ export default function useMedia() {
   // generation amount
   useEffect(() => {
     window.electronApi.sequencer.onRecordingStatus((status: boolean) => {
-      console.log({ status });
       setIsRecording(status);
     });
     window.electronApi.sequencer.onPlaybackStatus((status: boolean) => {
-      console.log({ status });
       setIsPlaying(status);
     });
   });

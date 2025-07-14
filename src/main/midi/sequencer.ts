@@ -1,6 +1,6 @@
 import Midi from 'midi'
 import { NoteEvent } from '../types';
-import { CLOCKS_PER_BEAT } from '../constants';
+import { CLOCKS_PER_BEAT, CLOCK_PER_BEAT_RESOLUTION } from '../constants';
 // MIDI Clock Constants
 const MIDI_NOTE_ON_ID = 0x90;
 const MIDI_NOTE_OFF_ID = 0x80;
@@ -38,6 +38,7 @@ export default class Sequencer {
   // recording
   recording: {
     isRecording: boolean;
+    startRecordingTick: number;
     startRecordingTime: number;
     noteOnEvents: { [note: number]: number };
     recordedEvents: NoteEvent[];
@@ -76,6 +77,7 @@ export default class Sequencer {
       isRecording: false,
       noteOnEvents: {},
       startRecordingTime: -1,
+      startRecordingTick: -1,
       recordedEvents: [],
       stopRecordingOnBeat: -1,
       stopRecordingCallback: undefined,
@@ -136,17 +138,37 @@ export default class Sequencer {
   // recording
   startRecording(bars: number, callback?: RecordingCallback) {
     this.recording.stopRecordingOnBeat = this.clockCount + this.beatsPerBar * bars * CLOCKS_PER_BEAT;
-    this.recording.startRecordingTime = this.clockCount;
+    this.recording.startRecordingTime = Date.now();
+    this.recording.startRecordingTick = this.clockCount;
     this.recording.noteOnEvents = {};
     this.recording.recordedEvents = [];
     this.recording.stopRecordingCallback = callback;
     this.recording.isRecording = true;
   }
+  notesFromTimeToTicks(notes: NoteEvent[]) {
+    let bpm = this.bpm;
+    if (bpm > 300 || bpm < 30) {
+      console.error('got wrong bpm values');
+      bpm = 120;
+    }
+    // converts to format of 96 ticks per quarter note
+    const conversionValue = CLOCK_PER_BEAT_RESOLUTION / (bpm / (1000 * 60));
+    const convertedResults = notes.map((noteEvent) => {
+      return {
+        deltaTime: Math.round(noteEvent.deltaTime * conversionValue),
+        duration: Math.round(noteEvent.duration * conversionValue),
+        note: noteEvent.note,
+      }
+    });
+    return convertedResults;
+  }
   stopRecording() {
     this.recording.stopRecordingOnBeat = -1;
     this.recording.isRecording = false;
+
+    // transform recording events to ticks
     if (this.recording.stopRecordingCallback) {
-      this.recording.stopRecordingCallback([...this.recording.recordedEvents]);
+      this.recording.stopRecordingCallback(this.notesFromTimeToTicks(this.recording.recordedEvents));
     }
     this.ccEventsBuffer = new Map<number, number>();
   }
@@ -162,17 +184,19 @@ export default class Sequencer {
   }
 
   private recordNoteOn(note: number) {
-    const currentTime = this.clockCount - this.recording.startRecordingTime;
-    this.recording.noteOnEvents[note] = currentTime;
+    // const currentTime = this.clockCount - this.recording.startRecordingTime;
+    const currentTimeMs = Date.now() - this.recording.startRecordingTime;
+    this.recording.noteOnEvents[note] = currentTimeMs;
   }
   private recordNoteOff(note: number) {
     // check if we have received a note on for this note
     if (!this.recording.noteOnEvents[note]) {
       return;
     }
-    const currentTime = this.clockCount - this.recording.startRecordingTime;
+    // const currentTime = this.clockCount - this.recording.startRecordingTick;
+    const currentTimeMs = Date.now() - this.recording.startRecordingTime;
     const deltaTime = this.recording.noteOnEvents[note];
-    const duration = currentTime - deltaTime;
+    const duration = currentTimeMs - deltaTime;
     const relativeDeltaTime = this.recording.recordedEvents.length === 0
       ? deltaTime
       : deltaTime - this.recording.recordedEvents.reduce((sum, e) => sum + e.deltaTime, 0);
@@ -188,9 +212,6 @@ export default class Sequencer {
   handleNoteRecordingInput(message: Midi.MidiMessage) {
     const [status, note, velocity] = message;
     const command = status & 0xF0;
-
-
-    console.log({ message });
     if (!this.recording.isRecording) {
       return
     }
@@ -228,6 +249,8 @@ export default class Sequencer {
     this.stopPlaybackCallback = callback;
     let accumulatedTicks = 0;
     let endTime = 0;
+    const clockConversionValue = CLOCKS_PER_BEAT / CLOCK_PER_BEAT_RESOLUTION;
+    this.playbackEvents = []; // reset playback events
     events.forEach((event) => {
       accumulatedTicks += event.deltaTime;
       const endTick = accumulatedTicks + event.duration;
@@ -236,8 +259,8 @@ export default class Sequencer {
       }
       this.playbackEvents.push({
         note: event.note,
-        startTick: accumulatedTicks,
-        endTick,
+        startTick: Math.round(accumulatedTicks * clockConversionValue),
+        endTick: Math.round(endTick * clockConversionValue),
       });
     });
     console.log({ notes: this.playbackEvents });
@@ -245,7 +268,7 @@ export default class Sequencer {
     console.log({ start: this.playbackEvents[0], end: this.playbackEvents.slice(-1)[0], numberOfBarsToPlay });
 
     this.startPlayingTime = this.clockCount;
-    this.stopPlayingOnBeat = endTime + this.clockCount;
+    this.stopPlayingOnBeat = endTime * clockConversionValue + this.clockCount;
     this.isPlaying = true;
   }
 
@@ -294,6 +317,7 @@ export default class Sequencer {
       }
       this.lastBeatTime = now;
       this.bpm = calculateBPM(this.beatTimes);
+      console.log('BPM: ', this.bpm);
     }
   }
   handleDawInput(message: Midi.MidiMessage) {

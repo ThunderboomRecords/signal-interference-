@@ -1,4 +1,4 @@
-import { CLOCKS_PER_BEAT } from "../constants";
+import { CLOCKS_PER_BEAT, CLOCK_PER_BEAT_RESOLUTION } from "../constants";
 import type { NoteEvent } from "../types";
 export function sequenceDistance<T extends NoteEvent>(a: T[], b: T[]): number {
   let distance = 0;
@@ -120,7 +120,7 @@ class HigherOrderMarkovChain<T> {
 
     const startTimeSum = start.reduce((sum, e: any) => sum + (e.deltaTime || 0), 0);
     const startLength = start.length;
-    const totalTargetTime = bars * beatsPerBar * CLOCKS_PER_BEAT;
+    const totalTargetTime = bars * beatsPerBar * CLOCK_PER_BEAT_RESOLUTION;
 
 
     const result: T[] = [...start];
@@ -185,6 +185,17 @@ class HigherOrderMarkovChain<T> {
       current = [...current.slice(1), next];
     }
     return result.slice(startLength);
+  }
+  countDifferentNumbersInTransitions(): number {
+    const uniqueNumbers = new Set<number>();
+
+    for (const [, nextMap] of this.transitions) {
+      for (const count of nextMap.values()) {
+        uniqueNumbers.add(count);
+      }
+    }
+
+    return uniqueNumbers.size;
   }
 
   private weightedRandomChoice(counts: Map<string, number>): string {

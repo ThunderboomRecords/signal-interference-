@@ -1,5 +1,9 @@
 import { Note } from "@tonejs/midi/dist/Note";
 
+export type NoteSecondTiming = {
+  deltaTime: number;
+  duration: number;
+}
 export type NoteEvent = { note: number; deltaTime: number; duration: number };
 
 export interface ApplicationSettings {
