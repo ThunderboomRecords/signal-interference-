@@ -8,6 +8,8 @@ import * as path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
 import { getSongFromId } from '../helpers';
+import HigherOrderMarkovChain, { MarkovModelData } from '../markov/model';
+
 
 export class Song implements SongI {
   name: string;
@@ -18,6 +20,7 @@ export class Song implements SongI {
   stemData: GenerationStemData[];
   midiSelection: { cc: number; value: number; };
   generationOptions: GenerationOptions;
+  markovData?: MarkovModelData;
   constructor(beatsPerBar = DEFAULT_BEAT_PER_BAR) {
     this.trainingData = [];
     this.beatsPerBar = beatsPerBar;
@@ -26,11 +29,21 @@ export class Song implements SongI {
     this.midiSelection = { cc: 56, value: 0 };
     this.generationOptions = { order: 12, barsToGenerate: 12 };
     this.id = crypto.randomUUID();
+    this.markovData = undefined;
   }
 
 }
 
+export type SongChangeCallback = (oldSong: Song, newSong: Song) => Partial<Song> | undefined;
+const callbacks: {
+  songChange?: SongChangeCallback;
+} = {
+  songChange: undefined,
+};
 
+export function setSongChangeCallback(callback: SongChangeCallback) {
+  callbacks.songChange = callback;
+}
 export class Project implements ProjectI {
   songs: SongI[];
   lastSavePath?: string;
@@ -61,7 +74,13 @@ export class Project implements ProjectI {
       console.error('could not find song to update');
       return;
     }
-    this.songs[index] = { ...this.songs[index], ...song };
+
+    let tmp = { ...this.songs[index], ...song };
+    if (callbacks.songChange) {
+      const newSong = callbacks.songChange(this.songs[index], tmp) || {};
+      tmp = { ...tmp, ...newSong };
+    }
+    this.songs[index] = tmp;
   }
   deleteSong(song: Partial<Song>) {
     if (!song.id) {
@@ -167,6 +186,12 @@ export async function deleteSong(song: Partial<Song>) {
 }
 export async function setActiveSong(id: string) {
   currentProject.activeSongId = id;
+  const song = getSongFromId(id, currentProject.songs);
+
+  const res = callbacks.songChange ? callbacks.songChange(song, song) : undefined;
+  if (res) {
+    updateSongInProject({ ...song, ...res });
+  }
   await updateProject(currentProject);
   return currentProject;
 }
