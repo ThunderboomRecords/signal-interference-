@@ -37,7 +37,7 @@ export async function parseMidiFile(filePath: string): Promise<NoteEvent[]> {
   for (let i = 0; i < notes.length; i++) {
     const note = notes[i];
     const previousTime = i > 0 ? getNoteTickTime(midi, notes[i - 1]) : 0;
-    const deltaTime = getNoteTickTime(midi, note) - previousTime;
+    const deltaTime = i > 0 ? getNoteTickTime(midi, note) - previousTime : 0;
 
     const previousTimeS = i > 0 ? notes[i - 1].time : 0;
     const deltaTimeS = note.time - previousTime;
