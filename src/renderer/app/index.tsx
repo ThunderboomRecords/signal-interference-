@@ -25,7 +25,7 @@ export default function App() {
   return (
     <>
       <GeneralControls />
-      <Songs />
+      <Songs />        
       <SheetMusic notes={notes ?? []}/>
     </>
   );

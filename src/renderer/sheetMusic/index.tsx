@@ -2,12 +2,16 @@ import React, { useRef, useEffect } from 'react';
 import {
   Renderer,
   Stave,
-  StaveNote,
   Voice,
-  Formatter
+  Formatter,
+  StaveNote,
+  Barline,
 } from 'vexflow';
 import { NoteEvent } from 'src/main/types';
-import { noteEventsToVexflowNotes } from './renderUtils';
+import {
+  noteEventsToVexflowNotes,
+  getFirstFourBars,
+} from './renderUtils';
 import './index.css';
 
 interface SheetMusicProps {
@@ -21,31 +25,80 @@ const SheetMusic: React.FC<SheetMusicProps> = ({ notes }) => {
     const div = containerRef.current;
     if (!div) return;
 
-    div.innerHTML = ''; // Clear previous render
+    div.innerHTML = '';
 
+    const padding = 20; // or 30 for extra room
+    const width = div.clientWidth - padding;
+    console.log("Current width Sheets:", width);
+    const height = 200;
+    const totalBars = 4;
+    const barWidth = width / totalBars;
+    
     const renderer = new Renderer(div, Renderer.Backends.SVG);
-    renderer.resize(600, 200);
+    renderer.resize(width, height);
     const context = renderer.getContext();
 
-    const stave = new Stave(10, 40, 580);
-    stave.addClef('treble').addTimeSignature('4/4');
-    stave.setContext(context).draw();
+    const staveY = 40;
+    const startX = 0;
 
-    const vexNotes = noteEventsToVexflowNotes(notes);
-    console.log('Notes received in <SheetMusic />:', notes);
-    console.log('Converted VexFlow notes:', vexNotes);
-    if (vexNotes.length === 0) return;
+    // Step 1: Get the first four bars as a flat list
+    const slicedNotes = getFirstFourBars(notes);
+    if (slicedNotes.length === 0) return;
 
-    const voice = new Voice({ numBeats: 4, beatValue: 4 });
-    voice.setStrict(false); // This prevents IncompleteVoice errors
-    voice.addTickables(vexNotes);
+    // Step 2: Split notes into 4 bars based on deltaTime
+    const ticksPerQuarter = 96;
+    const ticksPerBar = ticksPerQuarter * 4;
+    let bars: NoteEvent[][] = [[], [], [], []];
+    let currentTicks = 0;
+    let currentBarIndex = 0;
 
-    const formatter = new Formatter();
-    formatter.joinVoices([voice]).format([voice], 500);    voice.draw(context, stave);
+    for (const note of slicedNotes) {
+      currentTicks += note.deltaTime;
+
+      if (currentTicks > (currentBarIndex + 1) * ticksPerBar && currentBarIndex < 3) {
+        currentBarIndex++;
+      }
+
+      bars[currentBarIndex].push(note);
+    }
+
+    // Step 3: Render each bar
+    bars.forEach((barNotes, index) => {
+      const x = startX + index * barWidth;
+      const stave = new Stave(x, staveY, barWidth);
+
+      if (index === 0) {
+        stave.addClef('treble').addTimeSignature('4/4');
+      }
+
+      if (index === bars.length - 1) {
+        const barlineX = stave.getX() + stave.getWidth();
+        const topY = stave.getYForLine(0);
+        const bottomY = stave.getYForLine(4);
+      
+        context.beginPath();
+        context.moveTo(barlineX, topY);
+        context.lineTo(barlineX, bottomY);
+        context.stroke();
+      }
+
+      stave.setContext(context).draw();
+
+      const vexNotes = noteEventsToVexflowNotes(barNotes);
+      if (vexNotes.length === 0) return;
+
+      const voice = new Voice({ numBeats: 4, beatValue: 4 });
+      voice.setStrict(false);
+      voice.addTickables(vexNotes);
+
+      const formatter = new Formatter();
+      formatter.joinVoices([voice]).format([voice], barWidth - 10);
+      voice.draw(context, stave);
+    });
 
   }, [notes]);
 
-  return <div ref={containerRef} className="sheet-music-container" />;
+  return <div ref={containerRef} className="sheet-music-container"/>;
 };
 
 export default SheetMusic;
