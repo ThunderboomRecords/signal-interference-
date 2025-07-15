@@ -1,5 +1,6 @@
 import { Note } from "@tonejs/midi/dist/Note";
 import { NoteEvent, Song } from "../types";
+export { StopWatch } from "./stopwatch";
 
 export function getSongFromId(id: string, songs: Song[]) {
   return songs.filter((song) => song.id === id)?.[0] || undefined;
@@ -39,3 +40,4 @@ export function addNewGeneratedData(song: Song, notes: NoteEvent[]): Song {
   });
   return song;
 }
+
