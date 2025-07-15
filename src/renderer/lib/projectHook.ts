@@ -1,5 +1,5 @@
+import { Project, Song, NoteEvent } from "src/main/types";
 import { useCallback, useEffect, useState } from "react";
-import { Project, Song } from "src/main/types";
 import { debounce } from "../../utils/debounce";
 
 export default function useProject() {
@@ -53,7 +53,15 @@ export default function useProject() {
     setProject((e) => ({ ...e, activeSongId: song.id }));
     selectSongMain(song);
   }
-
+  const getLatestGeneratedNotes = (): NoteEvent[] => {
+    if (!project || !project.activeSongId) return [];
+  
+    const activeSong = project.songs.find(s => s.id === project.activeSongId);
+    if (!activeSong || !activeSong.history?.length) return [];
+  
+    const lastHistoryEntry = activeSong.history[activeSong.history.length - 1];
+    return lastHistoryEntry?.output?.[0]?.notes ?? [];
+  };
 
   return {
     project,
@@ -62,5 +70,6 @@ export default function useProject() {
     updateSongs,
     deleteSong,
     selectSong,
+    getLatestGeneratedNotes,
   }
 }

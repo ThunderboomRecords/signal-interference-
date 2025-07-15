@@ -1,8 +1,7 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 import { contextBridge, ipcRenderer } from 'electron';
-import { MidiInterfaceInfo, Project, Song } from '../main/types';
-
+import { MidiInterfaceInfo, Project, Song, NoteEvent} from '../main/types';
 
 type MidiInterfaceCallback = (info: MidiInterfaceInfo) => void;
 
@@ -66,11 +65,17 @@ const ipcApi = {
       'project:onUpdate',
       (_event, project) => callback(project)
     ),
+  },
+  // Added sheetmusic in the renderer
+  sheetMusic: {
+    onRender: (callback: (notes: NoteEvent[]) => void) => {
+      ipcRenderer.on('sheet:render', (_event, notes: NoteEvent[]) => {
+        callback(notes);
+      });
+    }
   }
-
 }
 
 contextBridge.exposeInMainWorld('electronApi', ipcApi);
-
 
 export type ElectonAPI = typeof ipcApi;
