@@ -16,7 +16,6 @@ export interface MidiInterfaceInfo {
   name: string;
 }
 
-
 export interface TrainingData {
   name: string; // original file name
   notes: NoteEvent[];

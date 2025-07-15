@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Project, Song } from "src/main/types";
+import { Project, Song, NoteEvent } from "src/main/types";
 
 export default function useProject() {
   const [project, setProject] = useState<Project | undefined>(undefined);
@@ -42,7 +42,15 @@ export default function useProject() {
       setProject(proj);
     });
   }
-
+  const getLatestGeneratedNotes = (): NoteEvent[] => {
+    if (!project || !project.activeSongId) return [];
+  
+    const activeSong = project.songs.find(s => s.id === project.activeSongId);
+    if (!activeSong || !activeSong.history?.length) return [];
+  
+    const lastHistoryEntry = activeSong.history[activeSong.history.length - 1];
+    return lastHistoryEntry?.output?.[0]?.notes ?? [];
+  };
 
   return {
     project,
@@ -51,5 +59,6 @@ export default function useProject() {
     updateSongs,
     deleteSong,
     selectSong,
+    getLatestGeneratedNotes,
   }
 }
