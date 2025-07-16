@@ -26,13 +26,6 @@ export interface MarkovModelData {
     string,
     MarkovEntry
   >>; // order->Key -> (Next -> Count)
-  transitionsDownSampled:
-  Record<number,
-    Record<number,
-      Map<string,
-        Map<string,
-          MarkovNextEntry
-        >>>>; // order -> downsampledivision -> key -> next -> count
   order: number;
 }
 export default class HigherOrderMarkovChain implements MarkovModelData {
@@ -41,13 +34,6 @@ export default class HigherOrderMarkovChain implements MarkovModelData {
     MarkovEntry
   >> = {}; // order->Key -> (Next -> Count)
   order: number;
-  transitionsDownSampled:
-    Record<number,
-      Record<number,
-        Map<string,
-          Map<string,
-            MarkovNextEntry
-          >>>> = {}; // order -> downsampledivision -> key -> next -> count
   minFuzzyOrder: number;
 
 
@@ -69,52 +55,14 @@ export default class HigherOrderMarkovChain implements MarkovModelData {
   export(): MarkovModelData {
     return {
       transitions: this.transitions, // order->Key -> (Next -> Count)
-      transitionsDownSampled: this.transitionsDownSampled, // order -> downsampledivision -> key -> next -> count
       order: this.order,
     };
   }
   import(data: MarkovModelData) {
     this.transitions = { ...data.transitions };
-    this.transitionsDownSampled = { ...data.transitionsDownSampled };
     this.order = data.order;
   }
 
-  private downSampleSequence(sequence: NoteEvent[], divisor: number) {
-    return sequence.map((event) => {
-      return {
-        note: event.note,
-        deltaTime: Math.round(event.deltaTime / divisor),
-        duration: Math.round(event.duration / divisor)
-      }
-    });
-  }
-  addSequenceDownsampled(sequence: NoteEvent[], timeDivision: number, order: number) {
-    if (sequence.length < this.order + 1) {
-      throw new Error('Sequence too short for this order');
-    }
-    if (!this.transitionsDownSampled[order]) {
-      this.transitionsDownSampled[order] = {};
-    }
-
-    if (!this.transitionsDownSampled[order][timeDivision]) {
-      this.transitionsDownSampled[order][timeDivision] = new Map();
-    }
-    const downSampledSequence = this.downSampleSequence(sequence, timeDivision);
-    for (let i = 0; i <= sequence.length - this.order - 1; i++) {
-      const currentSequence = downSampledSequence.slice(i, i + order);
-      const key = this.encodeSequence(currentSequence);
-      const nextEvent = sequence[i + order];
-      const next = this.encodeSequence(nextEvent);
-      if (!this.transitionsDownSampled[order][timeDivision].has(key)) {
-        this.transitionsDownSampled[order][timeDivision].set(key, new Map());
-      }
-      const nextMap = this.transitionsDownSampled[order][timeDivision].get(key)!;
-      const oldOne = nextMap.get(next) || { event: nextEvent, count: 0 };
-      const newOne = { ...oldOne };
-      newOne.count++;
-      nextMap.set(next, newOne);
-    }
-  }
   private internaliseSequence(sequence: NoteEvent[], order: number) {
     if (sequence.length < this.order + 1) {
       throw new Error('Sequence too short for this order');
@@ -142,23 +90,15 @@ export default class HigherOrderMarkovChain implements MarkovModelData {
       newOne.count++;
       nextMap.set(next, newOne);
     }
-    // starts at 8 as a lot of it does not impact retrieval a whole lot
-    for (let i = 8; i <= 16; i *= 2) {
-      this.addSequenceDownsampled(sequence, i, order);
-    }
   }
   private analyseModel(sequenceLength: number) {
-    const logLine = (order: number, downsample: number, repetitionPercentage: number) => {
-      console.log(`${order}\t${downsample}\t\t\t${Math.round(repetitionPercentage * 10) / 10}%`);
+    const logLine = (order: number, repetitionPercentage: number) => {
+      console.log(`${order}\t${Math.round(repetitionPercentage * 10) / 10}%`);
     }
-    console.log(`Order\tDownsampleDivisor\tRepetition in %`);
+    console.log(`Order\tRepetition in %`);
     for (let i = this.order; i > 0; i--) {
       const orderLength = sequenceLength - i;
-      logLine(i, 1, (1 - this.transitions[i].size / orderLength) * 100);
-      const keys = Object.keys(this.transitionsDownSampled[i]).map((key) => parseInt(key));
-      keys.forEach((key) => {
-        logLine(i, key, (1 - this.transitionsDownSampled[i][key].size / orderLength) * 100);
-      })
+      logLine(i, (1 - this.transitions[i].size / orderLength) * 100);
     }
   }
 
@@ -257,32 +197,6 @@ export default class HigherOrderMarkovChain implements MarkovModelData {
     }
     return next;
   }
-  private findMatchAccrossDownsamples(sequence: NoteEvent[], minOrder?: number) {
-    let next: NoteEvent | undefined = undefined;
-    const minimumOrder = minOrder || 1;
-
-    // Try exact matching first
-    for (let k = this.order; k >= minimumOrder; k--) {
-      const key = this.encodeSequence(sequence.slice(-k)); // Use last k elements
-
-      const downSampleKeys = Object.keys(this.transitionsDownSampled[k]);
-
-      for (const downSampleKey of downSampleKeys) {
-        const possibleNext = this.transitionsDownSampled[k][downSampleKey as unknown as number].get(key);
-        if (possibleNext && possibleNext.size > 0) {
-          const nextStr = this.weightedRandomChoice(possibleNext);
-          next = nextStr;
-          break;
-        }
-      }
-      if (next) {
-        break;
-      }
-    }
-    return next;
-  }
-  // TODO: optimise fuzzy matching using better distance metrics
-  //
   private findMatchFuzzy(sequence: NoteEvent[], minOrder?: number) {
     const minimumOrder = minOrder || this.minFuzzyOrder || 1;
     let bestMatch: { key: string, order: number } | undefined = undefined;
@@ -344,14 +258,6 @@ export default class HigherOrderMarkovChain implements MarkovModelData {
     while (currentTimeSum - startTimeSum <= totalTargetTime) {
       let next: NoteEvent | undefined = undefined;
       next = this.findMatchAccrossOrders(result);
-      if (!next) {
-        // try downsampling
-        next = this.findMatchAccrossDownsamples(result);
-        if (next) {
-          console.log('matched on downsample');
-        }
-
-      }
       // Fuzzy match if no exact match found
       if (!next) {
         next = this.findMatchFuzzy(result);
