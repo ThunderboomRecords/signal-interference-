@@ -1,3 +1,8 @@
 #app-title {
   margin-left: 0px;
 }
+
+#app-container {
+  padding: 32px;
+  box-sizing: border-box;
+}

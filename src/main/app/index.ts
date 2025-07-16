@@ -10,6 +10,7 @@ import { SETTINGS_FILENAME } from "../constants";
 import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setActiveSong, updateProject, updateSongInProject } from "./project";
 import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording, getSongFromId } from "../helpers";
 import { createPortal } from "react-dom";
+import { write } from "original-fs";
 export { loadProject, createProject, saveProject } from './project';
 
 let generatedOutput: NoteEvent[] = [];
@@ -183,18 +184,17 @@ export function init(window: BrowserWindow) {
   registerMainWindow(window);
 }
 
-export function setDawInput(port: number | string) {
-  console.log('setting clock input', port);
+export function setDawInput(port: string) {
   midiPorts.setDawPort(port);
   sequencer.setDawInput(midiPorts.getDawPort());
   return port;
 }
-export function setRecordingInput(port: number | string) {
+export function setRecordingInput(port: string) {
   midiPorts.setInputPort(port);
   sequencer.setRecordingInput(midiPorts.getInputPort());
   return port;
 }
-export function setMidiOutput(port: number | string) {
+export function setMidiOutput(port: string) {
   midiPorts.setOutputPort(port);
   sequencer.setOutput(midiPorts.getOutputPort());
   return port;
@@ -229,9 +229,8 @@ const settingCommands: { [setting: string]: settingsCommand } = {
       return;
     }
     // update clock
-    setDawInput(dawNo);
-    console.log('sending setting currentDawInput', { name: dawInput, index: dawNo });
-    window.webContents.send('midi:midi:currentDawInput', { name: dawInput, index: dawNo });
+    setDawInput(dawInput);
+    window.webContents.send('midi:currentDawInput', { name: dawInput, index: dawNo });
   },
 
   midiInput: (midiInput: string, window: BrowserWindow) => {
@@ -241,7 +240,7 @@ const settingCommands: { [setting: string]: settingsCommand } = {
       return;
     }
     // update clock
-    setRecordingInput(midiInputNo);
+    setRecordingInput(midiInput);
     window.webContents.send('midi:currentMidiInput', { name: midiInput, index: midiInputNo });
   },
 
@@ -252,7 +251,7 @@ const settingCommands: { [setting: string]: settingsCommand } = {
       return;
     }
     // update clock
-    setMidiOutput(midiOutputNo);
+    setMidiOutput(midiOutput);
     window.webContents.send('midi:currentMidiOutput', { name: midiOutput, index: midiOutputNo });
   }
 }
@@ -260,10 +259,9 @@ const settingCommands: { [setting: string]: settingsCommand } = {
 
 
 export async function loadSettings(window: BrowserWindow) {
-  console.log('loading settings');
   try {
     const settings = await loadSettingsFromDisk();
-    console.log('found settings', settings);
+    console.log('loaded settings', settings);
     const settingKeys = Object.keys(settings) as (keyof ApplicationSettings)[];
     settingKeys.forEach((key) => {
       // validate input
@@ -284,14 +282,37 @@ const updateSettingFunctions: Record<keyof ApplicationSettings, (value: string) 
   midiOutput: setMidiOutput,
 }
 
+function isApplicationSettingsKey(key: any): boolean {
+  const keys: (keyof ApplicationSettings)[] = ['dawInput', 'midiInput', 'midiOutput'];
+  if (typeof key !== 'string') {
+    return false;
+  }
+  if (keys.find((e) => e === key)) {
+    return true;
+  }
+  return false;
+}
+
 export async function updateSetting(key: keyof ApplicationSettings, value: string) {
   const settings = await loadSettingsFromDisk();
-  const newSettings = { ...settings };
-  console.log('updating setting', key, value);
+  const newSettings: ApplicationSettings = {};
+
+
+  Object.keys(settings).forEach((key: keyof ApplicationSettings) => {
+    if (isApplicationSettingsKey(key)) {
+      newSettings[key] = settings[key];
+    }
+  });
+
+  if (!isApplicationSettingsKey(key)) {
+    console.error('not a settings key');
+    return settings;
+  }
   newSettings[key] = value;
   if (updateSettingFunctions[key]) {
     updateSettingFunctions[key](value);
   }
+  writeSettingsToDisk(newSettings);
   return newSettings;
 }
 

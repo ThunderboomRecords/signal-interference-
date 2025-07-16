@@ -1,4 +1,5 @@
 import midi from 'midi';
+import { MidiInterfaceInfo } from '../types';
 
 export class MidiIO {
   dawInput: midi.Input;
@@ -64,12 +65,12 @@ export class MidiIO {
 }
 
 
-function getMidiPorts(io: midi.Input | midi.Output) {
+function getMidiPorts(io: midi.Input | midi.Output): MidiInterfaceInfo[] {
   const count = io.getPortCount();
-  const ports: string[] = [];
+  const ports: MidiInterfaceInfo[] = [];
   for (let i = 0; i < count; i++) {
     const name = io.getPortName(i);
-    ports.push(name);
+    ports.push({ name, index: i });
   }
   return ports;
 }
@@ -79,19 +80,20 @@ export function getMidiIOPorts() {
   const output = new midi.Output();
   const inputPorts = getMidiPorts(input);
   const outputPorts = getMidiPorts(output);
-  return {
+  const ret = {
     input: inputPorts,
     output: outputPorts
   };
+  return ret;
 }
 
 export function getMidiPortNumberByName(name: string, portType: 'input' | 'output') {
   const ports = getMidiIOPorts();
   if (portType === 'input') {
-    const ind = ports.input.findIndex((port) => port === name);
+    const ind = ports.input.findIndex((port) => port.name === name);
     return ind;
   }
-  const ind = ports.output.findIndex((port) => port === name);
+  const ind = ports.output.findIndex((port) => port.name === name);
   return ind;
 }
 

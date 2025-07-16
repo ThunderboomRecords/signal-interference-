@@ -8,6 +8,7 @@ import {
 import { useEffect, useState } from "react";
 import { setDawInput } from "src/main/app";
 import { MidiInterfaceInfo } from "src/main/types";
+import useMidi from "../lib/useMidi";
 import './index.css';
 
 function MidiSelector(props: {
@@ -46,7 +47,7 @@ function SingleSelector(props: {
   inputList: string[];
   labelName: string;
   selectCallback: (id: string) => void;
-  updateContent: () => void;
+  updateContent?: () => void;
   currentInput?: string;
 }) {
   const { inputList, labelName, selectCallback, updateContent, currentInput } = props;
@@ -70,70 +71,49 @@ function SingleSelector(props: {
 
 // TODO: Add history for this so it remembers the configuration and default io config
 export default function MidiSelect() {
-  const [midiIO, setMidiIO] = useState<{ input: string[], output: string[] }>({ input: [], output: [] });
-  const [currentDawInput, setDawInput] = useState<string | undefined>(undefined);
-  const [currentMidiInput, setMidiInput] = useState<string | undefined>(undefined);
-  const [currentMidiOutput, setMidiOutput] = useState<string | undefined>(undefined);
+  const {
+    dawPort,
+    inputPort,
+    outputPort,
+    availableInputs,
+    availableOutputs,
+    setDawPort,
+    setInputPort,
+    setOutputPort,
+    refreshPorts,
+  } = useMidi();
 
-
-
-  const getContents = async () => {
-    const inputs = await window.electronApi.midiConfiguration.getMidiInputs();
-    setMidiIO(inputs);
-  }
-
-  useEffect(() => {
-    getContents();
-    window.electronApi.midiConfiguration.onMidiInput((value: MidiInterfaceInfo) => {
-      setMidiInput(value.name);
-    });
-    window.electronApi.midiConfiguration.onMidiOutput((value: MidiInterfaceInfo) => {
-      setMidiOutput(value.name);
-    });
-    window.electronApi.midiConfiguration.onMidiDawInput((value: MidiInterfaceInfo) => {
-      console.log(value);
-      setDawInput(value.name);
-    });
-  }, []);
-
+  console.log({ dawPort });
   return (
     <>
       <SingleSelector
-        currentInput={currentDawInput}
-        inputList={midiIO.input}
+        currentInput={dawPort?.name}
+        inputList={availableInputs.map(e => e.name)}
         labelName="Daw"
-        updateContent={getContents}
+        updateContent={refreshPorts}
         selectCallback={(id) => {
-          window.electronApi.updateSetting('dawInput', id).then((e) => {
-
-            setDawInput(e.dawInput);
-          });
+          console.log("setting", id);
+          setDawPort({ name: id });
         }}
       />
 
       <SingleSelector
-        currentInput={currentMidiInput}
-        inputList={midiIO.input}
+        currentInput={inputPort?.name}
+        inputList={availableInputs.map(e => e.name)}
         labelName="Input"
-        updateContent={getContents}
+        updateContent={refreshPorts}
         selectCallback={(id) => {
-          window.electronApi.updateSetting('midiInput', id).then((e) => {
-            console.log({ e });
-            setMidiInput(e.midiInput);
-          });
+          setInputPort({ name: id });
         }}
       />
 
       <SingleSelector
-        currentInput={currentMidiOutput}
-        inputList={midiIO.output}
+        currentInput={outputPort?.name}
+        inputList={availableOutputs.map(e => e.name)}
         labelName="Output"
-        updateContent={getContents}
+        updateContent={refreshPorts}
         selectCallback={(id) => {
-          window.electronApi.updateSetting('midiOutput', id).then((e) => {
-            setMidiOutput(e.midiOutput);
-          });
-
+          setOutputPort({ name: id });
         }}
       />
     </>

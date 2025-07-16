@@ -8,11 +8,11 @@ type MidiInterfaceCallback = (info: MidiInterfaceInfo) => void;
 
 const ipcApi = {
   midiConfiguration: {
-    setDawInput: (midiDawInput: number) => ipcRenderer.send('midi:setDawInput', midiDawInput),
-    setInputChannel: (midiInput: number) => ipcRenderer.send('midi:setInput', midiInput),
-    setOutputChannel: (midiOutput: number) => ipcRenderer.send('midi:setOutput', midiOutput),
+    setDawInput: (midiDawInput: string) => ipcRenderer.send('midi:setDawInput', midiDawInput),
+    setInputChannel: (midiInput: string) => ipcRenderer.send('midi:setInput', midiInput),
+    setOutputChannel: (midiOutput: string) => ipcRenderer.send('midi:setOutput', midiOutput),
     // invoking
-    getMidiInputs: () => ipcRenderer.invoke('midi:getPorts'),
+    getMidiPorts: () => ipcRenderer.invoke('midi:getPorts'),
     onMidiDawInput: (callback: MidiInterfaceCallback) => {
       ipcRenderer.on('midi:currentDawInput', (_event, value) => { callback(value); });
     },
@@ -22,6 +22,15 @@ const ipcApi = {
     onMidiOutput: (callback: MidiInterfaceCallback) => {
       ipcRenderer.on('midi:currentMidiOutput', (_event, value) => { callback(value); });
     },
+    onMidiChange: (callback: (
+      midi: {
+        daw: MidiInterfaceInfo,
+        input: MidiInterfaceInfo,
+        output: MidiInterfaceInfo,
+      }) => void) => ipcRenderer.on(
+        'midi:onUpdate',
+        (_event, midi) => callback(midi)
+      ),
   },
   sequencer: {
     record: () => ipcRenderer.invoke('sequencer:record'),
