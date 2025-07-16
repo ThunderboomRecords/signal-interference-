@@ -6,7 +6,7 @@ import { parseMidiFile } from "../midi/fileIO";
 import * as path from 'path'
 import { app, BrowserWindow, dialog } from "electron";
 import fs from 'fs/promises';
-import { SETTINGS_FILENAME } from "../constants";
+import { MAX_HISTORY_LENGTH, SETTINGS_FILENAME } from "../constants";
 import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setActiveSong, setSongChangeCallback, updateProject, updateSongInProject } from "./project";
 import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording, getSongFromId, StopWatch } from "../helpers";
 import { createPortal } from "react-dom";
@@ -57,6 +57,9 @@ async function recordingCallback(notes: NoteEvent[]) {
     input: { notes: [...notes], timestamp: new Date() },
     output: [],
   });
+  if (currentSong.history.length > MAX_HISTORY_LENGTH) {
+    currentSong.history = currentSong.history.slice(-MAX_HISTORY_LENGTH);
+  }
   console.log('stopped recording', currentSong);
   mainWindow.webContents.send('sequencer:recordingStatus', false);
 

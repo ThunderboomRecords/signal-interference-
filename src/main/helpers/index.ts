@@ -1,4 +1,5 @@
 import { Note } from "@tonejs/midi/dist/Note";
+import { MAX_HISTORY_LENGTH } from "../constants";
 import { NoteEvent, Song } from "../types";
 export { StopWatch } from "./stopwatch";
 
@@ -38,6 +39,9 @@ export function addNewGeneratedData(song: Song, notes: NoteEvent[]): Song {
     timestamp: new Date(),
     notes: [...notes],
   });
+  if (song.history[song.history.length - 1].output.length > MAX_HISTORY_LENGTH) {
+    song.history[song.history.length - 1].output = song.history[song.history.length - 1].output.slice(-MAX_HISTORY_LENGTH);
+  }
   return song;
 }
 
