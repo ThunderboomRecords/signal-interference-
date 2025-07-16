@@ -26,6 +26,14 @@ export function stopRecording() {
   sequencer.stopRecording();
   mainWindow.webContents.send('sequencer:recordingStatus', false);
 }
+export function stripProjectForRenderer(project: Partial<Project>) {
+  const strippedProject = { ...project };
+  strippedProject.songs = strippedProject.songs.map((entry) => {
+    delete entry.markovData;
+    return entry;
+  });
+  return strippedProject;
+}
 
 function sendProjectUpdateToRenderer(project?: Partial<Project>) {
   if (project) {
@@ -34,7 +42,7 @@ function sendProjectUpdateToRenderer(project?: Partial<Project>) {
   } else {
     console.log('sending full project update to renderer');
     const currentProject = getCurrentProject();
-    mainWindow.webContents.send('project:onUpdate', currentProject);
+    mainWindow.webContents.send('project:onUpdate', stripProjectForRenderer(currentProject));
   }
 }
 
@@ -91,7 +99,6 @@ export function startPlayback() {
     console.log('nothing to playback');
     return;
   }
-  console.log('using the following notes for playback', generatedOutput);
   sequencer.startPlayback([...generatedOutput], stopPlaybackCallback);
   mainWindow?.webContents.send('sequencer:playbackStatus', true);
 }

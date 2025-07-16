@@ -18,7 +18,7 @@ export default function useMedia() {
     window.electronApi.sequencer.onPlaybackStatus((status: boolean) => {
       setIsPlaying(status);
     });
-  });
+  }, []);
   const stopRecording = () => {
     window.electronApi.sequencer.stopRecording();
   };
