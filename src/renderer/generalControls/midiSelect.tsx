@@ -51,7 +51,6 @@ function SingleSelector(props: {
   currentInput?: string;
 }) {
   const { inputList, labelName, selectCallback, updateContent, currentInput } = props;
-  console.log({ currentInput });
   return (
     <div className="midi-selector">
       <label>
@@ -83,7 +82,6 @@ export default function MidiSelect() {
     refreshPorts,
   } = useMidi();
 
-  console.log({ dawPort });
   return (
     <>
       <SingleSelector

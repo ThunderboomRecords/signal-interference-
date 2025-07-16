@@ -11,7 +11,6 @@ export default function useMidi() {
   const [availableOutputPorts, setAvailableOutputPorts] = useState<MidiInterfaceInfo[]>([]);
 
   const getContents = async () => {
-    console.log('callded');
     const io = await window.electronApi.midiConfiguration.getMidiPorts();
     setAvailableInputPorts(io.input);
     setAvailableOutputPorts(io.output);
@@ -38,7 +37,6 @@ export default function useMidi() {
     )
   }, []);
 
-  console.log({ dawPort, inputPort, outputPort, availableInputPorts, availableOutputPorts });
   return {
     dawPort,
     inputPort,

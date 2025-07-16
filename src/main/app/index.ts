@@ -1,6 +1,6 @@
 import Sequencer from "../midi/sequencer";
 import { getMidiPortNumberByName, midiPorts } from "../midi/io";
-import { ApplicationSettings, NoteEvent, Song } from "../types";
+import { ApplicationSettings, NoteEvent, Project, Song } from "../types";
 import HigherOrderMarkovChain from "../markov/model";
 import { parseMidiFile } from "../midi/fileIO";
 import * as path from 'path'
@@ -27,9 +27,15 @@ export function stopRecording() {
   mainWindow.webContents.send('sequencer:recordingStatus', false);
 }
 
-function sendProjectUpdateToRenderer() {
-  const currentProject = getCurrentProject();
-  mainWindow.webContents.send('project:onUpdate', currentProject);
+function sendProjectUpdateToRenderer(project?: Partial<Project>) {
+  if (project) {
+    console.log('sending update to renderer', project);
+    mainWindow.webContents.send('project:onUpdate', project);
+  } else {
+    console.log('sending full project update to renderer');
+    const currentProject = getCurrentProject();
+    mainWindow.webContents.send('project:onUpdate', currentProject);
+  }
 }
 
 export async function newProject() {
@@ -166,7 +172,11 @@ function isSameTrainingsData(song1: Song, song2: Song) {
 
 function onSongChange(oldSong: Song, newSong: Song): Partial<Song> | undefined {
   console.log('song change');
-  if (!newSong.markovData || !isSameTrainingsData(oldSong, newSong) || currentMarkovModel.songId !== newSong.id) {
+  // guard to prevent training on non existing data
+  if (newSong.trainingData.length === 0) {
+    return undefined;
+  }
+  if (!newSong.markovData || !isSameTrainingsData(oldSong, newSong) || currentMarkovModel?.songId !== newSong.id) {
     console.log('updating markov data');
     currentMarkovModel = { model: new HigherOrderMarkovChain(newSong.generationOptions.order), songId: newSong.id };
     newSong.trainingData.forEach((dat) => {
@@ -187,21 +197,21 @@ function onSongChange(oldSong: Song, newSong: Song): Partial<Song> | undefined {
 }
 
 async function switchSong(value: number) {
+  const totalTime = new StopWatch();
   const proj = getCurrentProject();
-  console.log('trying to set song', value);
   const song = proj.songs.find((song) => song.midiSelection.value === value);
   if (song) {
-    console.log('setting song', song)
     await setActiveSong(song.id);
     const songRes = onSongChange(song, song);
-    if (songRes !== {}) {
+    if (songRes) {
       await updateSongInProject({ ...song, ...songRes });
     }
-    sendProjectUpdateToRenderer();
+    sendProjectUpdateToRenderer({ activeSongId: songRes.id });
     // setup markov stuff
   } else {
     console.error('could not set song', value);
   }
+  console.log('swichSong() totalTime', totalTime.stop());
 }
 
 function registerCallbacks() {

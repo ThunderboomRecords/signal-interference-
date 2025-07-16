@@ -184,16 +184,24 @@ export async function deleteSong(song: Partial<Song>) {
   await updateProject(currentProject);
   return currentProject;
 }
-export async function setActiveSong(id: string) {
+import StopWatch from '../helpers/stopwatch';
+
+export async function setActiveSong(id: string): Promise<Partial<ProjectI>> {
+  const totalTime = new StopWatch();
+  // nothing changed
+  if(currentProject.activeSongId === id) {
+    return {};
+  }
   currentProject.activeSongId = id;
   const song = getSongFromId(id, currentProject.songs);
-
   const res = callbacks.songChange ? callbacks.songChange(song, song) : undefined;
+
   if (res) {
     updateSongInProject({ ...song, ...res });
   }
   await updateProject(currentProject);
-  return currentProject;
+  console.log('set active song total time', totalTime.stop());
+  return { activeSongId: currentProject.activeSongId };
 }
 
 // loads it on boot.
