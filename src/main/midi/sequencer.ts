@@ -242,6 +242,7 @@ export default class Sequencer {
 
   private noteOn(note: number, velocity: number = this.defaultVelocity, channel: number = this.outputChannel) {
     this.noteOutput.sendMessage([MIDI_NOTE_ON_ID + channel, note, velocity]);
+
     this.noteOnPlayingEvents.set(note, velocity);
   }
 
@@ -317,7 +318,7 @@ export default class Sequencer {
       }
       this.lastBeatTime = now;
       this.bpm = calculateBPM(this.beatTimes);
-      console.log('BPM: ', this.bpm);
+      // console.log('BPM: ', this.bpm);
     }
   }
   handleDawInput(message: Midi.MidiMessage) {
