@@ -52,12 +52,18 @@ export default class HigherOrderMarkovChain implements MarkovModelData {
 
 
   constructor(order?: number, minimalFuzzyOrder?: number) {
-    this.order = order || DEFAULT_MARKOV_ORDER;
-    this.minFuzzyOrder = minimalFuzzyOrder || this.order / 2;
+    this.order = Math.floor(order) || DEFAULT_MARKOV_ORDER;
+    this.minFuzzyOrder = Math.floor(minimalFuzzyOrder || this.order / 2);
+    if (this.minFuzzyOrder < 1) {
+      this.minFuzzyOrder = 1;
+    }
   }
   setOrder(order: number, minimalFuzzyOrder?: number) {
-    this.order = order;
-    this.minFuzzyOrder = minimalFuzzyOrder || this.order / 2;
+    this.order = Math.floor(order);
+    this.minFuzzyOrder = Math.floor(minimalFuzzyOrder || this.order / 2);
+    if (this.minFuzzyOrder < 1) {
+      this.minFuzzyOrder = 1;
+    }
 
   }
   export(): MarkovModelData {
@@ -278,7 +284,7 @@ export default class HigherOrderMarkovChain implements MarkovModelData {
   // TODO: optimise fuzzy matching using better distance metrics
   //
   private findMatchFuzzy(sequence: NoteEvent[], minOrder?: number) {
-    const minimumOrder = minOrder || this.minFuzzyOrder;
+    const minimumOrder = minOrder || this.minFuzzyOrder || 1;
     let bestMatch: { key: string, order: number } | undefined = undefined;
     let bestDistance = Infinity;
     let bestDistancePreviousRound = Infinity;
@@ -322,10 +328,10 @@ export default class HigherOrderMarkovChain implements MarkovModelData {
     return undefined;
   }
   generateBarsFuzzy(start: NoteEvent[], bars: number, beatsPerBar = 4): NoteEvent[] {
-    if (start.length !== this.order) {
-      throw new Error(`Start sequence must have exactly ${this.order} elements`);
-    }
 
+    if (start.length < this.order) {
+      throw new Error(`Start sequence must have at least ${this.order} elements`);
+    }
     const startTimeSum = start.reduce((sum, e: any) => sum + (e.deltaTime || 0), 0);
     const startLength = start.length;
     const totalTargetTime = bars * beatsPerBar * CLOCK_PER_BEAT_RESOLUTION;
@@ -335,10 +341,8 @@ export default class HigherOrderMarkovChain implements MarkovModelData {
     let current = [...start];
     let currentTimeSum = start.reduce((sum, e: any) => sum + (e.deltaTime || 0), 0);
 
-
     while (currentTimeSum - startTimeSum <= totalTargetTime) {
       let next: NoteEvent | undefined = undefined;
-
       next = this.findMatchAccrossOrders(result);
       if (!next) {
         // try downsampling
