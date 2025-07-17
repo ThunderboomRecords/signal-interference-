@@ -152,15 +152,21 @@ export default class Sequencer {
       bpm = 120;
     }
     // converts to format of 96 ticks per quarter note
-    const conversionValue = CLOCK_PER_BEAT_RESOLUTION / (bpm / (1000 * 60));
-    const convertedResults = notes.map((noteEvent) => {
+    const secondInMs = 1000;
+    const minuteInSeconds = 60;
+    const conversionValue = (secondInMs / (bpm / minuteInSeconds)) / CLOCK_PER_BEAT_RESOLUTION;
+    const orderedNotes = notes.sort((a, b) => a.deltaTime - b.deltaTime);
+    const convertedResults = orderedNotes.map((noteEvent, index) => {
+      const deltaTime = index > 0 ? noteEvent.deltaTime - orderedNotes[index - 1].deltaTime : noteEvent.deltaTime;
       return {
-        deltaTime: Math.round(noteEvent.deltaTime * conversionValue),
-        duration: Math.round(noteEvent.duration * conversionValue),
+        deltaTime: Math.round(deltaTime / conversionValue),
+        duration: Math.round(noteEvent.duration / conversionValue),
         note: noteEvent.note,
       }
     });
     return convertedResults;
+  }
+  notesAbsoluteToRelative(notes: NoteEvent[]) {
   }
   stopRecording() {
     this.recording.stopRecordingOnBeat = -1;
@@ -197,12 +203,9 @@ export default class Sequencer {
     const currentTimeMs = Date.now() - this.recording.startRecordingTime;
     const deltaTime = this.recording.noteOnEvents[note];
     const duration = currentTimeMs - deltaTime;
-    const relativeDeltaTime = this.recording.recordedEvents.length === 0
-      ? deltaTime
-      : deltaTime - this.recording.recordedEvents.reduce((sum, e) => sum + e.deltaTime, 0);
     this.recording.recordedEvents.push({
       note,
-      deltaTime: relativeDeltaTime,
+      deltaTime: currentTimeMs,
       duration,
     });
 
