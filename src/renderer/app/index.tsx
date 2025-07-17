@@ -25,9 +25,9 @@ export default function App() {
   return (
     <div id="app-container">
       <GeneralControls />
-      <Songs />        
-      <SheetMusic notes={notes ?? []}/>
-    </>
+      <Songs />
+      <SheetMusic notes={notes ?? []} />
+    </div>
   );
 }
 
