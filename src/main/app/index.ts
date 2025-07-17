@@ -10,7 +10,6 @@ import { MAX_HISTORY_LENGTH, SETTINGS_FILENAME } from "../constants";
 import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setActiveSong, setSongChangeCallback, updateProject, updateSongInProject } from "./project";
 import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording, getSongFromId, StopWatch } from "../helpers";
 import { createPortal } from "react-dom";
-import { write } from "original-fs";
 export { loadProject, createProject, saveProject } from './project';
 
 let generatedOutput: NoteEvent[] = [];
@@ -253,18 +252,36 @@ export function init(window: BrowserWindow) {
 }
 
 export function setDawInput(port: string) {
+  const dawNo = getMidiPortNumberByName(port, 'input');
+  if (dawNo === -1) {
+    console.error('could noto find', port);
+    return;
+  }
   midiPorts.setDawPort(port);
   sequencer.setDawInput(midiPorts.getDawPort());
+  mainWindow?.webContents.send('midi:currentDawInput', { name: port, index: dawNo });
   return port;
 }
 export function setRecordingInput(port: string) {
+  const dawNo = getMidiPortNumberByName(port, 'input');
+  if (dawNo === -1) {
+    console.error('could noto find', port);
+    return;
+  }
   midiPorts.setInputPort(port);
   sequencer.setRecordingInput(midiPorts.getInputPort());
+  mainWindow?.webContents.send('midi:currentMidiInput', { name: port, index: dawNo });
   return port;
 }
 export function setMidiOutput(port: string) {
+  const dawNo = getMidiPortNumberByName(port, 'input');
+  if (dawNo === -1) {
+    console.error('could noto find', port);
+    return;
+  }
   midiPorts.setOutputPort(port);
   sequencer.setOutput(midiPorts.getOutputPort());
+  mainWindow?.webContents.send('midi:currentMidiOutput', { name: port, index: dawNo });
   return port;
 }
 
@@ -298,7 +315,6 @@ const settingCommands: { [setting: string]: settingsCommand } = {
     }
     // update clock
     setDawInput(dawInput);
-    window.webContents.send('midi:currentDawInput', { name: dawInput, index: dawNo });
   },
 
   midiInput: (midiInput: string, window: BrowserWindow) => {
@@ -309,7 +325,6 @@ const settingCommands: { [setting: string]: settingsCommand } = {
     }
     // update clock
     setRecordingInput(midiInput);
-    window.webContents.send('midi:currentMidiInput', { name: midiInput, index: midiInputNo });
   },
 
   midiOutput: (midiOutput: string, window: BrowserWindow) => {
@@ -320,7 +335,6 @@ const settingCommands: { [setting: string]: settingsCommand } = {
     }
     // update clock
     setMidiOutput(midiOutput);
-    window.webContents.send('midi:currentMidiOutput', { name: midiOutput, index: midiOutputNo });
   }
 }
 

@@ -14,13 +14,13 @@ const ipcApi = {
     // invoking
     getMidiPorts: () => ipcRenderer.invoke('midi:getPorts'),
     onMidiDawInput: (callback: MidiInterfaceCallback) => {
-      ipcRenderer.on('midi:currentDawInput', (_event, value) => { callback(value); });
+      return ipcRenderer.on('midi:currentDawInput', (_event, value) => { callback(value); });
     },
     onMidiInput: (callback: MidiInterfaceCallback) => {
-      ipcRenderer.on('midi:currentMidiInput', (_event, value) => { callback(value); });
+      return ipcRenderer.on('midi:currentMidiInput', (_event, value) => { callback(value); });
     },
     onMidiOutput: (callback: MidiInterfaceCallback) => {
-      ipcRenderer.on('midi:currentMidiOutput', (_event, value) => { callback(value); });
+      return ipcRenderer.on('midi:currentMidiOutput', (_event, value) => { callback(value); });
     },
     onMidiChange: (callback: (
       midi: {
