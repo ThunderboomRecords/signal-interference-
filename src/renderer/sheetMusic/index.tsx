@@ -6,6 +6,7 @@ import {
   Formatter,
   StaveNote,
   Barline,
+  Beam,
 } from 'vexflow';
 import { NoteEvent } from 'src/main/types';
 import {
@@ -91,9 +92,19 @@ const SheetMusic: React.FC<SheetMusicProps> = ({ notes }) => {
       voice.setStrict(false);
       voice.addTickables(vexNotes);
 
+      //Generate beams for eligible notes (eighths, sixteenths, etc.)
+      const beams = Beam.generateBeams(vexNotes);
+
       const formatter = new Formatter();
       formatter.joinVoices([voice]).format([voice], barWidth - 10);
+
+      //Draw the voice
       voice.draw(context, stave);
+
+      //Draw the beams
+      beams.forEach((beam) => {
+        beam.setContext(context).draw();
+      });
     });
 
   }, [notes]);
