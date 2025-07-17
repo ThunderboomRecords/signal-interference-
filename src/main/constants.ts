@@ -4,3 +4,5 @@ export const CLOCK_PER_BEAT_RESOLUTION = 96;
 export const DEFAULT_BEAT_PER_BAR = 4;
 export const SETTINGS_FILENAME = 'settings.json';
 export const ACTIVE_PROJECT_APP_DATA_FILENAME = 'current_project.json';
+export const DEFAULT_MARKOV_ORDER = 12;
+export const MAX_HISTORY_LENGTH = 10;

@@ -1,14 +1,14 @@
 import Sequencer from "../midi/sequencer";
 import { getMidiPortNumberByName, midiPorts } from "../midi/io";
-import { ApplicationSettings, NoteEvent, Song } from "../types";
+import { ApplicationSettings, NoteEvent, Project, Song } from "../types";
 import HigherOrderMarkovChain from "../markov/model";
 import { parseMidiFile } from "../midi/fileIO";
 import * as path from 'path'
 import { app, BrowserWindow, dialog } from "electron";
 import fs from 'fs/promises';
-import { SETTINGS_FILENAME } from "../constants";
-import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setActiveSong, updateProject, updateSongInProject } from "./project";
-import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording, getSongFromId } from "../helpers";
+import { MAX_HISTORY_LENGTH, SETTINGS_FILENAME } from "../constants";
+import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setActiveSong, setSongChangeCallback, updateProject, updateSongInProject } from "./project";
+import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording, getSongFromId, StopWatch } from "../helpers";
 import { createPortal } from "react-dom";
 import { write } from "original-fs";
 export { loadProject, createProject, saveProject } from './project';
@@ -16,6 +16,7 @@ export { loadProject, createProject, saveProject } from './project';
 let generatedOutput: NoteEvent[] = [];
 const DEFAULT_MAX_ORDER = 12;
 const DEFAULT_BAR_AMOUNT = 12;
+let currentMarkovModel: { model: HigherOrderMarkovChain, songId: string } | undefined = undefined;
 
 const sequencer = new Sequencer(midiPorts.getDawPort(), midiPorts.getInputPort(), midiPorts.getOutputPort());
 
@@ -25,10 +26,24 @@ export function stopRecording() {
   sequencer.stopRecording();
   mainWindow.webContents.send('sequencer:recordingStatus', false);
 }
+export function stripProjectForRenderer(project: Partial<Project>) {
+  const strippedProject = { ...project };
+  strippedProject.songs = strippedProject.songs.map((entry) => {
+    delete entry.markovData;
+    return entry;
+  });
+  return strippedProject;
+}
 
-function sendProjectUpdateToRenderer() {
-  const currentProject = getCurrentProject();
-  mainWindow.webContents.send('project:onUpdate', currentProject);
+function sendProjectUpdateToRenderer(project?: Partial<Project>) {
+  if (project) {
+    console.log('sending update to renderer', project);
+    mainWindow.webContents.send('project:onUpdate', project);
+  } else {
+    console.log('sending full project update to renderer');
+    const currentProject = getCurrentProject();
+    mainWindow.webContents.send('project:onUpdate', stripProjectForRenderer(currentProject));
+  }
 }
 
 export async function newProject() {
@@ -50,6 +65,9 @@ async function recordingCallback(notes: NoteEvent[]) {
     input: { notes: [...notes], timestamp: new Date() },
     output: [],
   });
+  if (currentSong.history.length > MAX_HISTORY_LENGTH) {
+    currentSong.history = currentSong.history.slice(-MAX_HISTORY_LENGTH);
+  }
   console.log('stopped recording', currentSong);
   mainWindow.webContents.send('sequencer:recordingStatus', false);
 
@@ -81,7 +99,6 @@ export function startPlayback() {
     console.log('nothing to playback');
     return;
   }
-  console.log('using the following notes for playback', generatedOutput);
   sequencer.startPlayback([...generatedOutput], stopPlaybackCallback);
   mainWindow?.webContents.send('sequencer:playbackStatus', true);
 }
@@ -92,6 +109,7 @@ export function stopPlayback() {
 
 export async function generate(amountOfBars?: number) {
   //const maxOrder = getNotesPerBar(generativeInput, sequencer.beatsPerBar).reduce((max: number, e: number) => (e > max ? e : max), 0);
+  const cTime = Date.now();
   console.log('starting to generate');
   const currentSong = getCurrentSong();
   console.log({ currentSong });
@@ -107,7 +125,6 @@ export async function generate(amountOfBars?: number) {
   const latestRecording = getLatestRecording(currentSong) || [];
   const defaultInput = currentSong.trainingData.slice(-1)[0].notes;
   const maxOrder = currentSong.generationOptions.order;
-  console.log({ maxOrder });
 
   let startSequence: NoteEvent[] = [];
   if (latestRecording && latestRecording.length >= maxOrder) {
@@ -120,41 +137,91 @@ export async function generate(amountOfBars?: number) {
       generativeInput: latestRecording.length,
       defaultInput: defaultInput.length,
       startSequence: startSequence.length,
-
     }
   });
   const barsToGenerate = bars;
-  const markov: HigherOrderMarkovChain<NoteEvent> = new HigherOrderMarkovChain<NoteEvent>(maxOrder);
-  currentSong.trainingData.forEach((data) => {
-    markov.addSequence(data.notes);
-  })
-  const generated = markov.generateBarsFuzzy(startSequence, barsToGenerate, sequencer.beatsPerBar);
-
-  // Count the unique numbers in markov.transitions
-  const uniqueNumbersCount = markov.countDifferentNumbersInTransitions();
-  console.log(`Unique numbers in transitions: ${uniqueNumbersCount}`);
-  console.log({ transitionMapSize: markov.transitions.size, inputSize: currentSong.trainingData[0].notes.length });
+  if (!currentSong.markovData || currentMarkovModel?.songId !== currentSong.id) {
+    console.log('training markov model');
+    const trainingStopWatch = new StopWatch();
+    currentMarkovModel = {
+      model: new HigherOrderMarkovChain(maxOrder),
+      songId: currentSong.id,
+    }
+    currentSong.trainingData.forEach((data) => {
+      currentMarkovModel.model.addSequence(data.notes);
+    })
+    if (!currentSong.markovData) {
+      currentSong.markovData = currentMarkovModel.model.export();
+      updateSongInProject(currentSong);
+    }
+    console.log(`Training took: ${trainingStopWatch.stop()}ms`);
+  }
+  const generationStopWatch = new StopWatch();
+  const generated = currentMarkovModel.model.generateBarsFuzzy(startSequence, barsToGenerate, sequencer.beatsPerBar);
+  console.log(`Generation took: ${generationStopWatch.stop()}ms`);
 
   // analyse the markov thins
   generatedOutput = [...generated];
+  const endTime = Date.now();
+  const deltaTime = endTime - cTime;
+  console.log(`generation took: ${deltaTime}ms`);
   const newSong = addNewGeneratedData(currentSong, generatedOutput);
   await updateSongInProject(newSong);
   sendProjectUpdateToRenderer();
 }
 
+function isSameTrainingsData(song1: Song, song2: Song) {
+  if (song1.trainingData.length !== song2.trainingData.length) {
+    return false;
+  }
+  if (JSON.stringify(song1.trainingData) !== JSON.stringify(song2.trainingData)) {
+    return false;
+  }
+  return true;
+}
 
+function onSongChange(oldSong: Song, newSong: Song): Partial<Song> | undefined {
+  console.log('song change');
+  // guard to prevent training on non existing data
+  if (newSong.trainingData.length === 0) {
+    return undefined;
+  }
+  if (!newSong.markovData || !isSameTrainingsData(oldSong, newSong) || currentMarkovModel?.songId !== newSong.id) {
+    console.log('updating markov data');
+    currentMarkovModel = { model: new HigherOrderMarkovChain(newSong.generationOptions.order), songId: newSong.id };
+    newSong.trainingData.forEach((dat) => {
+      currentMarkovModel.model.addSequence(dat.notes);
+    })
+    return ({ markovData: currentMarkovModel.model.export() });
+
+  } else {
+    const time = new StopWatch();
+    if (!currentMarkovModel) {
+      currentMarkovModel = { model: new HigherOrderMarkovChain(newSong.generationOptions.order), songId: newSong.id };
+    }
+    currentMarkovModel.model.import(newSong.markovData);
+    currentMarkovModel.model.setOrder(newSong.generationOptions.order);
+    console.log(`importing took: ${time.stop()}`);
+  }
+  return undefined;
+}
 
 async function switchSong(value: number) {
+  const totalTime = new StopWatch();
   const proj = getCurrentProject();
-  console.log('trying to set song', value);
   const song = proj.songs.find((song) => song.midiSelection.value === value);
   if (song) {
-    console.log('setting song', song)
     await setActiveSong(song.id);
-    sendProjectUpdateToRenderer();
+    const songRes = onSongChange(song, song);
+    if (songRes) {
+      await updateSongInProject({ ...song, ...songRes });
+    }
+    sendProjectUpdateToRenderer({ activeSongId: songRes.id });
+    // setup markov stuff
   } else {
     console.error('could not set song', value);
   }
+  console.log('swichSong() totalTime', totalTime.stop());
 }
 
 function registerCallbacks() {
@@ -182,6 +249,7 @@ function registerCallbacks() {
 export function init(window: BrowserWindow) {
   registerCallbacks();
   registerMainWindow(window);
+  setSongChangeCallback(onSongChange);
 }
 
 export function setDawInput(port: string) {

@@ -1,4 +1,5 @@
 import { Note } from "@tonejs/midi/dist/Note";
+import { MarkovModelData } from "./markov/model";
 
 export type NoteSecondTiming = {
   deltaTime: number;
@@ -54,6 +55,7 @@ export interface Song {
     value: number;
   };
   generationOptions: GenerationOptions;
+  markovData?: MarkovModelData;
 }
 
 export interface Project {

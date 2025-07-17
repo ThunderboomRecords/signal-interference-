@@ -48,6 +48,7 @@ export class MidiIO {
     }
     if (outputId < 0) {
       // disables port
+      console.log('output port disabled', { outputId });
       return;
     }
     this.outputPort.openPort(outputId);
