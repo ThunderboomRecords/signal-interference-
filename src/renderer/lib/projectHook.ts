@@ -11,7 +11,8 @@ export default function useProject() {
     });
     window.electronApi.project.onProjectChange((proj) => {
       console.log('project change', { proj });
-      setProject(proj);
+      // FIXME: double check partial updates and make a better mechanism for this. Now seems to break sometimes
+      setProject((project) => ({ ...project, ...proj }));
     });
   }, []);
   useEffect(() => {

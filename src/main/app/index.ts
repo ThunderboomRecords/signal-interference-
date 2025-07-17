@@ -216,7 +216,7 @@ async function switchSong(value: number) {
     if (songRes) {
       await updateSongInProject({ ...song, ...songRes });
     }
-    sendProjectUpdateToRenderer({ activeSongId: songRes.id });
+    sendProjectUpdateToRenderer({ activeSongId: song.id });
     // setup markov stuff
   } else {
     console.error('could not set song', value);
