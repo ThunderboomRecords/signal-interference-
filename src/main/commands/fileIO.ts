@@ -12,7 +12,13 @@ async function handleFileOpen() {
         extensions: ['mid', 'midi'],
         name: 'midi',
       }
+    ],
+    properties: [
+      'openDirectory',
+      'openFile',
+      'multiSelections',
     ]
+
   });
   // parse midi files immediately
   const output = {
