@@ -99,6 +99,15 @@ function SheetMusic(props: {}) {
       const formatter = new Formatter();
       formatter.joinVoices([voice]).format([voice], barWidth - 10);
       voice.draw(context, stave);
+      
+      vexNotes.forEach((note) => {
+        const id = (note as any).customId;
+        const el = (note as any).attrs?.el as SVGElement | null;
+        if (el && id) {
+          el.setAttribute('id', id);
+        }
+      });
+
       beams.forEach((beam) => beam.setContext(context).draw());
 
       // Draw final barline only for the last bar
@@ -114,6 +123,30 @@ function SheetMusic(props: {}) {
     });
 
   }, [notes, generationOptions, visible]);
+
+  function highlightNote(noteId: string) {
+    const el = document.getElementById(noteId);
+    if (el) {
+      el.classList.add('highlight');
+      setTimeout(() => el.classList.remove('highlight'), 200); // Highlight duration
+    }
+  }
+  
+  function playNotes() {
+    const bpm = 120;
+    const ticksPerQuarter = 96;
+    const msPerTick = (60 / bpm) * 1000 / ticksPerQuarter;
+  
+    let time = 0;
+    let noteIndex = 0;
+  
+    for (const note of notes) {
+      time += note.deltaTime;
+      const noteId = `note-${noteIndex}`;
+      setTimeout(() => highlightNote(noteId), time * msPerTick);
+      noteIndex++;
+    }
+  }  
 
   //return <div ref={containerRef} className="sheet-music-container"/>;
   return (

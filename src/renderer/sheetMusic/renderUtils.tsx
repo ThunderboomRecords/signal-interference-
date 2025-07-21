@@ -3,24 +3,26 @@ import { NoteEvent } from 'src/main/types';
 import { midiToVexflowKey, ticksToVexflowDuration } from '../../main/helpers';
 import { GenerationOptions } from 'src/main/types';
 
-export function noteEventsToVexflowNotes(noteEvents: NoteEvent[]): StaveNote[] {
-  return noteEvents.map(event => {
-    const key = midiToVexflowKey(event.note); // e.g., "f#/4"
-    const duration = ticksToVexflowDuration(event.duration); // e.g., "q"
+export function noteEventsToVexflowNotes(noteEvents: NoteEvent[], startIndex = 0): StaveNote[] {
+  return noteEvents.map((event, i) => {
+    const key = midiToVexflowKey(event.note);
+    const duration = ticksToVexflowDuration(event.duration);
 
-    const noteName = key.split('/')[0]; // "f#", "bb"
-    const octave = key.split('/')[1];   // "4"
+    const noteName = key.split('/')[0];
+    const octave = key.split('/')[1];
     const accidental = getAccidentalFromKey(noteName);
-    const cleanKey = noteName.replace(/[#b]/, '') + '/' + octave;
 
     const staveNote = new StaveNote({
-      keys: [key],  // e.g., "f/4"
+      keys: [key],
       duration,
     });
 
     if (accidental) {
       staveNote.addModifier(new Accidental(accidental), 0);
     }
+
+    // Assign a custom ID we can later use to find the rendered SVG element
+    (staveNote as any).customId = `note-${startIndex + i}`;
 
     return staveNote;
   });
