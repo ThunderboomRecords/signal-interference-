@@ -49,6 +49,12 @@ const createWindow = () => {
             mainApp.openProjectWithDialog();
           },
         },
+        {
+          label: 'Toggle Dev Tools',
+          click: async () => {
+            mainWindow.webContents.toggleDevTools();
+          },
+        },
       ],
     },
   ];
