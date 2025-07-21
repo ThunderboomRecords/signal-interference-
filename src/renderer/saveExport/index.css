@@ -1,0 +1,21 @@
+#save-export-container {
+    padding: 32px;
+    border-width: 0.5px;
+    border-color: #444;
+    color: white;
+}
+
+#item-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #999;
+    font-size: 11px;
+    padding-left: 24px;
+    padding-right: 24px;
+    height: 24px;
+    border-width: 0.5px; 
+    border-color: #444;
+    background-color: #222;
+  }

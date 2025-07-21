@@ -1,7 +1,12 @@
 #outerContainer {
   width: 100%;
-  padding: 16px;
+  padding-left: 24px;
+  padding-right: 24px;
   background-color: #222;
+  border-top-width: 0.5px;
+  border-left-width: 0.5px;
+  border-right-width: 0.5px;
+  border-color: #444;
 }
 
 #songContainer {
@@ -27,9 +32,20 @@
   & tr {
     padding-top: 16px;
     background-color: #222;
-    border-color: #777;
-    border-width: 0.5px;
   }
+}
+
+#item-header {
+  display: flex;
+  align-items: center;
+  color: #999;
+  font-size: 11px;
+  padding-left: 24px;
+  padding-right: 24px;
+  height: 24px;
+  border-width: 0.5px; 
+  border-color: #444;
+  background-color: #222;
 }
 
 #songs-container {
@@ -64,15 +80,15 @@
   }
 
   & tr:nth-child(odd) {
-    background-color: #555;
-    border-color: #777;
+    background-color: #444;
+    border-color: #444;
     border-width: 0.5px;
 
   }
 
   & tr:nth-child(even) {
     background-color:  #222;
-    border-color: #777;
+    border-color: #444;
     border-width: 0.5px;
   }
 
@@ -92,18 +108,28 @@
 #addSongButton {
   border-radius: 2px;
   background-color: #111;
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .file-button {
   & span {
+    font-style: italic;
     margin-left: 16px;
     border-radius: 2px;
-    background-color: #111;
     color: white;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    
   }
+}
+
+.file-button button {
+  cursor: pointer;
+}
+
+.delete-button button{
+  cursor: pointer;
 }
 
 .dialog-wrapper {
@@ -128,6 +154,7 @@
   max-width: 600px;
   background-color: var(--color-card);
   border-radius: 2px;
+  color: #222;
   box-shadow: var(--shadow);
   pointer-events: auto;
   padding: 16px;
@@ -155,7 +182,7 @@
 
 .selected {
   position: relative;
-  background-color: rgb(1, 1, 153);
+  background-color: rgb(69, 56, 245) !important;
 
   &:after {
     content: "";
@@ -172,200 +199,19 @@
 
 .name-input {
   box-sizing: border-box;
-  border-color: #777;
-  border-width: 1px;
-}
-
-#outerContainer {
-  width: 100%;
-  padding: 16px;
-  background-color: #222;
-}
-
-#songContainer {
-  width: 100%;
-  table-layout: auto;
-  gap: 16px;
-
-  & td {
-    padding-left: 16px;
-    padding-right: 16px;
-    padding-top: 16px;
-    padding-bottom: 16px;
-  }
-
-  & td:first-child {
-    padding-left: 16px;
-  }
-
-  & td:last-child {
-    padding-right: 16px;
-  }
-
-  & tr {
-    padding-top: 16px;
-    background-color: #222;
-    border-color: #777;
-    border-width: 0.5px;
-  }
-}
-
-#songs-container {
-  margin-bottom: 16px;
-  width: 100%;
-  grid-row: 2;
-  grid-column: span;
-  color: white;
-
-
-  & td {
-    padding-left: 16px;
-    padding-right: 8px;
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
-
-  & td:first-child {
-    padding-left: 16px;
-  }
-
-  & td.index-input {
-    width: 32px;
-    min-width: 32px;
-    max-width: 32px;
-    text-align: center;
-    padding: 0;
-  }
-
-  & td:last-child {
-    padding-right: 16px;
-  }
-
-  & tr:nth-child(odd) {
-    background-color: #555;
-    border-color: #777;
-    border-width: 0.5px;
-
-  }
-
-  & tr:nth-child(even) {
-    background-color:  #222;
-    border-color: #777;
-    border-width: 0.5px;
-  }
-
-  & tr {
-    padding-top: 16px;
-  }
-}
-
-
-#song-labels {
-  width: 100%;
-  font-size: 14px;
-  color: white;
-  /* border-bottom: 2px solid white; */
-}
-
-#addSongButton {
-  border-radius: 2px;
-  background-color: #111;
-}
-
-.file-button {
-  & span {
-    margin-left: 16px;
-    border-radius: 2px;
-    background-color: #111;
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    font-weight: 100 !important;
-    
-  }
-  
-}
-
-.dialog-wrapper {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  pointer-events: none;
-
-  & div {
-    padding-left: 32px;
-    padding-right: auto;
-  }
-}
-
-.dialog-content {
-  width: 100%;
-  max-width: 600px;
-  background-color: var(--color-card);
-  border-radius: 2px;
-  box-shadow: var(--shadow);
-  pointer-events: auto;
-  padding: 16px;
-  margin-left: auto;
-  margin-right: auto;
-  border: 1px solid var(--color-border);
-
-}
-
-.song-container {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding: 8px;
-
-
-  & td:first-child {
-    margin-left: 8px;
-  }
-
-  & td {
-    padding: 0px;
-  }
-}
-
-
-.selected {
-  position: relative;
-  background-color: rgb(1, 1, 153);
-
-  &:after {
-    content: "";
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    width: 100%;
-    height: 100%;
-    border-radius: 2px;
-    padding-left: 8px;
-    pointer-events: none;
-  }
-}
-
-.name-input {
-  margin-left: 8px;
-  box-sizing: border-box;
-  border-color: #777;
+  border-color: #666;
   border-width: 1px;
   font-weight: bold;
 }
 
-.index-input {
-  width: 32px;
-  min-width: 32px;
-  max-width: 32px;
-  text-align: center;
-  padding: 0;
-}
-
 #bottom-button {
-  padding: 16px; 
+  display: flex;
+  flex-direction: row-reverse;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-right: 32px;
+  padding-left: 32px;
+  border-bottom-width: 0.5px;
+  border-bottom-color: #444;
+  background-color: #222;
 }

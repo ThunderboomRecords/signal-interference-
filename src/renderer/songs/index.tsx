@@ -48,6 +48,9 @@ export default function Songs() {
   } = useProject();
   return (
     <>
+    <div id="item-header">
+      ALL SONGS
+    </div>
     <div id='outerContainer'>
       <table id='songContainer'>
         <thead id='song-labels'>
@@ -56,7 +59,7 @@ export default function Songs() {
             <td>Song Title</td>
             <td>Midi Input File</td>
             <td>Markov Order</td>
-            <td>Generatie Lengte</td>
+            <td>Generation Length</td>
             <td>Midi Selection Message</td>
             <td>Delete</td>
           </tr>
@@ -73,14 +76,14 @@ export default function Songs() {
           />
         </tbody>
       </table >
-      <div id='bottom-button'>
+    </div>
+    <div id='bottom-button'>
       <Button
         id='addSongButton'
         onClick={async () => {
           addSong();
         }}
       >+ Add New Song</Button>
-      </div>
     </div>
     </>
   )

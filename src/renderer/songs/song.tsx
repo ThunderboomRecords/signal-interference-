@@ -54,6 +54,7 @@ function DeleteButton(props: { onClick: () => void }) {
   const { onClick } = props;
 
   return (
+    <span  className="delete-button">
     <Dialog>
       <form>
         <DialogTrigger asChild>
@@ -76,7 +77,8 @@ function DeleteButton(props: { onClick: () => void }) {
           </DialogContent>
         </div>
       </form>
-    </Dialog >
+    </Dialog >       
+  </span>
   );
 }
 

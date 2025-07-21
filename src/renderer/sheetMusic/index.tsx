@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   Renderer,
   Stave,
@@ -15,7 +15,7 @@ import {
 } from './renderUtils';
 import './index.css';
 import useProject from '../lib/projectHook';
-import { Underline } from 'lucide-react';
+import { Underline, ChevronRight } from 'lucide-react';
 
 interface SheetMusicProps {
   notes: NoteEvent[];
@@ -26,8 +26,11 @@ function SheetMusic(props: {}) {
   const { latestGeneratedNotes, generationOptions } = useProject();
   const notes = latestGeneratedNotes;
   const containerRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    if (!visible) return;
+
     const div = containerRef.current;
     if (!div) return;
 
@@ -110,9 +113,29 @@ function SheetMusic(props: {}) {
       }
     });
 
-  }, [notes, generationOptions]);
+  }, [notes, generationOptions, visible]);
 
-  return <div ref={containerRef} className="sheet-music-container"/>;
+  //return <div ref={containerRef} className="sheet-music-container"/>;
+  return (
+    <>
+      <div id="item-header" onClick={() => setVisible((v) => !v)}>
+        <div>GENERATED SOLO</div>
+        <div>
+          <ChevronRight
+            size={11}
+            style={{
+              transform: visible ? 'rotate(90deg)' : 'rotate(0deg)',
+              transition: 'transform 0.3s ease',
+            }}
+          />
+        </div>
+      </div>
+      {visible && 
+        <div ref={containerRef} className="sheet-music-container" />
+      }
+
+    </>
+  );
 };
 
 export default SheetMusic;
