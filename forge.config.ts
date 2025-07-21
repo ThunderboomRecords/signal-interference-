@@ -115,6 +115,7 @@ const config: ForgeConfig = {
     },
   },
   packagerConfig: {
+    icon: 'assets/images/icon',
     prune: true,
     asar: { unpackDir: '' },
     ignore: (file) => {
