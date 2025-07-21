@@ -114,7 +114,7 @@ export async function generate(amountOfBars?: number) {
   console.log({ currentSong });
   if (amountOfBars !== undefined) {
     if (!currentSong.generationOptions) {
-      currentSong.generationOptions = { order: DEFAULT_MAX_ORDER, barsToGenerate: DEFAULT_BAR_AMOUNT };
+      currentSong.generationOptions = { order: DEFAULT_MAX_ORDER, barsToGenerate: amountOfBars };
     } else {
       currentSong.generationOptions.barsToGenerate = amountOfBars;
     }

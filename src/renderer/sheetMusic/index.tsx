@@ -8,18 +8,23 @@ import {
   Barline,
   Beam,
 } from 'vexflow';
-import { NoteEvent } from 'src/main/types';
+import { GenerationOptions, NoteEvent } from 'src/main/types';
 import {
   noteEventsToVexflowNotes,
-  getFirstFourBars,
+  getFirstNBars,
 } from './renderUtils';
 import './index.css';
+import useProject from '../lib/projectHook';
+import { Underline } from 'lucide-react';
 
 interface SheetMusicProps {
   notes: NoteEvent[];
+  generationOptions: GenerationOptions;
 }
 
-const SheetMusic: React.FC<SheetMusicProps> = ({ notes }) => {
+function SheetMusic(props: {}) {
+  const { latestGeneratedNotes, generationOptions } = useProject();
+  const notes = latestGeneratedNotes;
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,59 +33,53 @@ const SheetMusic: React.FC<SheetMusicProps> = ({ notes }) => {
 
     div.innerHTML = '';
 
-    const padding = 20; // or 30 for extra room
+    const padding = 100;
     const width = div.clientWidth - padding;
-    console.log("Current width Sheets:", width);
-    const height = 200;
-    const totalBars = 4;
-    const barWidth = width / totalBars;
-    
+    const barsPerRow = 4; // Max bars per horizontal row
+    const totalBars = generationOptions?.barsToGenerate ?? 4;
+    const barWidth = width / barsPerRow;
+
+    const rows = Math.ceil(totalBars / barsPerRow);
+    const staveHeight = 200; // height per stave row
+    const height = staveHeight * rows;
+
     const renderer = new Renderer(div, Renderer.Backends.SVG);
     renderer.resize(width, height);
     const context = renderer.getContext();
 
-    const staveY = 40;
-    const startX = 0;
-
-    // Step 1: Get the first four bars as a flat list
-    const slicedNotes = getFirstFourBars(notes);
-    if (slicedNotes.length === 0) return;
-
-    // Step 2: Split notes into 4 bars based on deltaTime
     const ticksPerQuarter = 96;
     const ticksPerBar = ticksPerQuarter * 4;
-    let bars: NoteEvent[][] = [[], [], [], []];
+
+    // Get sliced notes based on generation options
+    const slicedNotes = getFirstNBars(notes, generationOptions);
+    console.log("Current generation options:", generationOptions);
+    if (slicedNotes.length === 0) return;
+
+    // Split notes into bars
+    const bars: NoteEvent[][] = Array.from({ length: totalBars }, () => []);
     let currentTicks = 0;
     let currentBarIndex = 0;
 
     for (const note of slicedNotes) {
       currentTicks += note.deltaTime;
-
-      if (currentTicks > (currentBarIndex + 1) * ticksPerBar && currentBarIndex < 3) {
+      if (currentTicks > (currentBarIndex + 1) * ticksPerBar && currentBarIndex < totalBars - 1) {
         currentBarIndex++;
       }
-
       bars[currentBarIndex].push(note);
     }
 
-    // Step 3: Render each bar
+    // Render each bar
     bars.forEach((barNotes, index) => {
-      const x = startX + index * barWidth;
-      const stave = new Stave(x, staveY, barWidth);
+      const rowIndex = Math.floor(index / barsPerRow);
+      const colIndex = index % barsPerRow;
+
+      const x = colIndex * barWidth;
+      const y = 40 + rowIndex * staveHeight;
+
+      const stave = new Stave(x, y, barWidth);
 
       if (index === 0) {
         stave.addClef('treble').addTimeSignature('4/4');
-      }
-
-      if (index === bars.length - 1) {
-        const barlineX = stave.getX() + stave.getWidth();
-        const topY = stave.getYForLine(0);
-        const bottomY = stave.getYForLine(4);
-      
-        context.beginPath();
-        context.moveTo(barlineX, topY);
-        context.lineTo(barlineX, bottomY);
-        context.stroke();
       }
 
       stave.setContext(context).draw();
@@ -92,22 +91,26 @@ const SheetMusic: React.FC<SheetMusicProps> = ({ notes }) => {
       voice.setStrict(false);
       voice.addTickables(vexNotes);
 
-      //Generate beams for eligible notes (eighths, sixteenths, etc.)
       const beams = Beam.generateBeams(vexNotes);
 
       const formatter = new Formatter();
       formatter.joinVoices([voice]).format([voice], barWidth - 10);
-
-      //Draw the voice
       voice.draw(context, stave);
+      beams.forEach((beam) => beam.setContext(context).draw());
 
-      //Draw the beams
-      beams.forEach((beam) => {
-        beam.setContext(context).draw();
-      });
+      // Draw final barline only for the last bar
+      if (index === totalBars - 1) {
+        const barlineX = stave.getX() + stave.getWidth();
+        const topY = stave.getYForLine(0);
+        const bottomY = stave.getYForLine(4);
+        context.beginPath();
+        context.moveTo(barlineX, topY);
+        context.lineTo(barlineX, bottomY);
+        context.stroke();
+      }
     });
 
-  }, [notes]);
+  }, [notes, generationOptions]);
 
   return <div ref={containerRef} className="sheet-music-container"/>;
 };

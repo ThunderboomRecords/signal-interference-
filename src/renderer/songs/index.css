@@ -1,26 +1,34 @@
+#outerContainer {
+  width: 100%;
+  padding: 16px;
+  background-color: #222;
+}
+
 #songContainer {
   width: 100%;
   table-layout: auto;
   gap: 16px;
-  margin-bottom: 16px;
 
   & td {
-    padding-left: 8px;
-    padding-right: 8px;
-    padding-top: 8px;
-    padding-bottom: 8px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 16px;
+    padding-bottom: 16px;
   }
 
   & td:first-child {
-    padding-left: 0px;
+    padding-left: 16px;
   }
 
   & td:last-child {
-    padding-right: 0px;
+    padding-right: 16px;
   }
 
   & tr {
     padding-top: 16px;
+    background-color: #222;
+    border-color: #777;
+    border-width: 0.5px;
   }
 }
 
@@ -29,23 +37,72 @@
   width: 100%;
   grid-row: 2;
   grid-column: span;
+  color: white;
+
+
+  & td {
+    padding-left: 16px;
+    padding-right: 8px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  & td:first-child {
+    padding-left: 16px;
+  }
+
+  & td.index-input {
+    width: 32px;
+    min-width: 32px;
+    max-width: 32px;
+    text-align: center;
+    padding: 0;
+  }
+
+  & td:last-child {
+    padding-right: 16px;
+  }
+
+  & tr:nth-child(odd) {
+    background-color: #555;
+    border-color: #777;
+    border-width: 0.5px;
+
+  }
+
+  & tr:nth-child(even) {
+    background-color:  #222;
+    border-color: #777;
+    border-width: 0.5px;
+  }
+
+  & tr {
+    padding-top: 16px;
+  }
 }
+
 
 #song-labels {
   width: 100%;
-  font-weight: bold;
-  border-bottom: 2px solid black;
+  font-size: 14px;
+  color: white;
+  /* border-bottom: 2px solid white; */
 }
 
 #addSongButton {
-  width: 100%;
-  border-radius: 4px;
-  background-color: grey;
+  border-radius: 2px;
+  background-color: #111;
 }
 
 .file-button {
   & span {
     margin-left: 16px;
+    border-radius: 2px;
+    background-color: #111;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    
   }
 }
 
@@ -61,7 +118,7 @@
   pointer-events: none;
 
   & div {
-    padding-left: auto;
+    padding-left: 32px;
     padding-right: auto;
   }
 }
@@ -70,7 +127,7 @@
   width: 100%;
   max-width: 600px;
   background-color: var(--color-card);
-  border-radius: var(--radius-lg);
+  border-radius: 2px;
   box-shadow: var(--shadow);
   pointer-events: auto;
   padding: 16px;
@@ -85,6 +142,7 @@
   padding-bottom: 8px;
   padding: 8px;
 
+
   & td:first-child {
     margin-left: 8px;
   }
@@ -97,6 +155,7 @@
 
 .selected {
   position: relative;
+  background-color: rgb(1, 1, 153);
 
   &:after {
     content: "";
@@ -105,8 +164,187 @@
     left: 0px;
     width: 100%;
     height: 100%;
-    border: 2px solid black;
-    border-radius: 4px;
+    border-radius: 2px;
+    padding-left: 8px;
+    pointer-events: none;
+  }
+}
+
+.name-input {
+  box-sizing: border-box;
+  border-color: #777;
+  border-width: 1px;
+}
+
+#outerContainer {
+  width: 100%;
+  padding: 16px;
+  background-color: #222;
+}
+
+#songContainer {
+  width: 100%;
+  table-layout: auto;
+  gap: 16px;
+
+  & td {
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+
+  & td:first-child {
+    padding-left: 16px;
+  }
+
+  & td:last-child {
+    padding-right: 16px;
+  }
+
+  & tr {
+    padding-top: 16px;
+    background-color: #222;
+    border-color: #777;
+    border-width: 0.5px;
+  }
+}
+
+#songs-container {
+  margin-bottom: 16px;
+  width: 100%;
+  grid-row: 2;
+  grid-column: span;
+  color: white;
+
+
+  & td {
+    padding-left: 16px;
+    padding-right: 8px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  & td:first-child {
+    padding-left: 16px;
+  }
+
+  & td.index-input {
+    width: 32px;
+    min-width: 32px;
+    max-width: 32px;
+    text-align: center;
+    padding: 0;
+  }
+
+  & td:last-child {
+    padding-right: 16px;
+  }
+
+  & tr:nth-child(odd) {
+    background-color: #555;
+    border-color: #777;
+    border-width: 0.5px;
+
+  }
+
+  & tr:nth-child(even) {
+    background-color:  #222;
+    border-color: #777;
+    border-width: 0.5px;
+  }
+
+  & tr {
+    padding-top: 16px;
+  }
+}
+
+
+#song-labels {
+  width: 100%;
+  font-size: 14px;
+  color: white;
+  /* border-bottom: 2px solid white; */
+}
+
+#addSongButton {
+  border-radius: 2px;
+  background-color: #111;
+}
+
+.file-button {
+  & span {
+    margin-left: 16px;
+    border-radius: 2px;
+    background-color: #111;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: 100 !important;
+    
+  }
+  
+}
+
+.dialog-wrapper {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  pointer-events: none;
+
+  & div {
+    padding-left: 32px;
+    padding-right: auto;
+  }
+}
+
+.dialog-content {
+  width: 100%;
+  max-width: 600px;
+  background-color: var(--color-card);
+  border-radius: 2px;
+  box-shadow: var(--shadow);
+  pointer-events: auto;
+  padding: 16px;
+  margin-left: auto;
+  margin-right: auto;
+  border: 1px solid var(--color-border);
+
+}
+
+.song-container {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding: 8px;
+
+
+  & td:first-child {
+    margin-left: 8px;
+  }
+
+  & td {
+    padding: 0px;
+  }
+}
+
+
+.selected {
+  position: relative;
+  background-color: rgb(1, 1, 153);
+
+  &:after {
+    content: "";
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    border-radius: 2px;
     padding-left: 8px;
     pointer-events: none;
   }
@@ -115,4 +353,19 @@
 .name-input {
   margin-left: 8px;
   box-sizing: border-box;
+  border-color: #777;
+  border-width: 1px;
+  font-weight: bold;
+}
+
+.index-input {
+  width: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  text-align: center;
+  padding: 0;
+}
+
+#bottom-button {
+  padding: 16px; 
 }

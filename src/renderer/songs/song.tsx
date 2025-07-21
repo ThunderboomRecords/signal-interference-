@@ -84,6 +84,7 @@ function DeleteButton(props: { onClick: () => void }) {
 export default function SongBar(props: {
   song: Song,
   selected: boolean,
+  index: number,
   onSelect?: (song: Song) => void,
   onChange?: (song: Song) => void,
   onDelete?: (song: Partial<Song>) => void,
@@ -98,6 +99,9 @@ export default function SongBar(props: {
 
   return (
     <tr onClick={() => { onSelect(song) }} className={`song-container ${selected && 'selected'}`}>
+      <td className="index-input">
+        {props.index + 1}
+      </td>
       <td>
         <Input className="name-input" onInput={(e) => {
           const newSongInfo = { ...song };

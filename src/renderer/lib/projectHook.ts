@@ -1,9 +1,11 @@
-import { Project, Song, NoteEvent } from "src/main/types";
+import { Project, Song, NoteEvent, GenerationOptions } from "src/main/types";
 import { useCallback, useEffect, useState } from "react";
 import { debounce } from "../../utils/debounce";
+import { Underline } from "lucide-react";
 
 export default function useProject() {
   const [project, setProject] = useState<Project | undefined>(undefined);
+  const debouncedSetProject = useCallback(debounce(setProject, 20), [setProject]);
   useEffect(() => {
     // get songs
     window.electronApi.project.getCurrent().then((val: Project) => {
@@ -12,7 +14,7 @@ export default function useProject() {
     window.electronApi.project.onProjectChange((proj) => {
       console.log('project change', { proj });
       // FIXME: double check partial updates and make a better mechanism for this. Now seems to break sometimes
-      setProject((project) => ({ ...project, ...proj }));
+      debouncedSetProject((project) => ({ ...project, ...proj }));
     });
   }, []);
   useEffect(() => {
@@ -54,15 +56,12 @@ export default function useProject() {
     setProject((e) => ({ ...e, activeSongId: song.id }));
     selectSongMain(song);
   }
-  const getLatestGeneratedNotes = (): NoteEvent[] => {
-    if (!project || !project.activeSongId) return [];
-  
-    const activeSong = project.songs.find(s => s.id === project.activeSongId);
-    if (!activeSong || !activeSong.history?.length) return [];
-  
-    const lastHistoryEntry = activeSong.history[activeSong.history.length - 1];
-    return lastHistoryEntry?.output?.[0]?.notes ?? [];
-  };
+
+  const activeSong = project?.songs?.filter((e) => e.id === project.activeSongId)?.[0] || undefined;
+  //const latestGeneratedNotes = activeSong?.history?.slice(-1)?.[0].output?.slice(-1)?.[0].notes;
+  const latestGeneratedNotes = activeSong?.history?.at(-1)?.output?.at(-1)?.notes;
+  const barsGenerated = activeSong?.generationOptions.barsToGenerate;
+  const generationOptions = activeSong?.generationOptions;
 
   return {
     project,
@@ -71,6 +70,9 @@ export default function useProject() {
     updateSongs,
     deleteSong,
     selectSong,
-    getLatestGeneratedNotes,
+    activeSong,
+    latestGeneratedNotes,
+    barsGenerated,
+    generationOptions,
   }
 }

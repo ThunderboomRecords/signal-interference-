@@ -5,7 +5,11 @@ export default function GeneralControls() {
   return (
     <div id="GeneralControls">
       <MediaControls />
-      <MidiSelect />
+      <div id="VerticalLine">
+      </div>
+      <div id="MidiSelectGroup">
+        <MidiSelect />
+      </div>
     </div>
   )
 }
