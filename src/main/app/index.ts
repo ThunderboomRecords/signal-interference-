@@ -91,6 +91,9 @@ export function startRecording(amountOfBars?: number) {
 function stopPlaybackCallback() {
   mainWindow.webContents.send('sequencer:playbackStatus', false);
 }
+function onPlaybackClock(currentClock: number) {
+  mainWindow.webContents.send('sequencer:playbackClock', currentClock);
+}
 export function startPlayback() {
   const currentSong = getCurrentSong();
   const generatedOutput = getLatestGeneratedOutput(currentSong);
@@ -100,6 +103,7 @@ export function startPlayback() {
   }
   sequencer.startPlayback([...generatedOutput], stopPlaybackCallback);
   mainWindow?.webContents.send('sequencer:playbackStatus', true);
+  sequencer.setPlaybackClockCallback(onPlaybackClock);
 }
 export function stopPlayback() {
   sequencer.stopPlayback();

@@ -4,33 +4,40 @@ import {
   Stave,
   Voice,
   Formatter,
-  StaveNote,
-  Barline,
   Beam,
 } from 'vexflow';
 import { GenerationOptions, NoteEvent } from 'src/main/types';
 import {
   noteEventsToVexflowNotes,
   getFirstNBars,
+  HighlighedNote,
 } from './renderUtils';
 import './index.css';
 import useProject from '../lib/projectHook';
-import { Underline, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
+import useMedia from '../lib/useMedia';
 
-interface SheetMusicProps {
-  notes: NoteEvent[];
-  generationOptions: GenerationOptions;
+interface NoteTime {
+  note: number;
+  start: number;
+  end: number;
 }
 
-function SheetMusic(props: {}) {
+function SheetMusic() {
   const { latestGeneratedNotes, generationOptions } = useProject();
-  const notes = latestGeneratedNotes;
+  const { isPlaying, playbackClock } = useMedia();
+
   const containerRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(true);
 
+  const ticksPerQuarter = 96;
+  const midiClockTickPerQuarter = 24;
+  const tempo = 120; // optionally make this dynamic later
+  const clockTick = playbackClock * ticksPerQuarter/ midiClockTickPerQuarter;
+  console.log({clockTick});
+
   useEffect(() => {
     if (!visible) return;
-
     const div = containerRef.current;
     if (!div) return;
 
@@ -38,28 +45,22 @@ function SheetMusic(props: {}) {
 
     const padding = 100;
     const width = div.clientWidth - padding;
-    const barsPerRow = 4; // Max bars per horizontal row
+    const barsPerRow = 4;
     const totalBars = generationOptions?.barsToGenerate ?? 4;
     const barWidth = width / barsPerRow;
-
-    const rows = Math.ceil(totalBars / barsPerRow);
-    const staveHeight = 200; // height per stave row
-    const height = staveHeight * rows;
+    const staveHeight = 200;
+    const height = staveHeight * Math.ceil(totalBars / barsPerRow);
 
     const renderer = new Renderer(div, Renderer.Backends.SVG);
     renderer.resize(width, height);
     const context = renderer.getContext();
 
-    const ticksPerQuarter = 96;
     const ticksPerBar = ticksPerQuarter * 4;
-
-    // Get sliced notes based on generation options
-    const slicedNotes = getFirstNBars(notes, generationOptions);
-    console.log("Current generation options:", generationOptions);
+    const slicedNotes = getFirstNBars(latestGeneratedNotes, generationOptions, ticksPerQuarter);
     if (slicedNotes.length === 0) return;
 
-    // Split notes into bars
-    const bars: NoteEvent[][] = Array.from({ length: totalBars }, () => []);
+    // Build bar array with timing info
+    const bars: { event: NoteEvent; time: NoteTime }[][] = Array.from({ length: totalBars }, () => []);
     let currentTicks = 0;
     let currentBarIndex = 0;
 
@@ -68,107 +69,76 @@ function SheetMusic(props: {}) {
       if (currentTicks > (currentBarIndex + 1) * ticksPerBar && currentBarIndex < totalBars - 1) {
         currentBarIndex++;
       }
-      bars[currentBarIndex].push(note);
+
+      bars[currentBarIndex].push({
+        event: note,
+        time: {
+          note: note.note,
+          start: currentTicks,
+          end: currentTicks + note.duration,
+        },
+      });
     }
 
-    // Render each bar
-    bars.forEach((barNotes, index) => {
-      const rowIndex = Math.floor(index / barsPerRow);
-      const colIndex = index % barsPerRow;
+    let globalNoteIndex = 0;
 
-      const x = colIndex * barWidth;
-      const y = 40 + rowIndex * staveHeight;
+    bars.forEach((barNotes, barIdx) => {
+      const row = Math.floor(barIdx / barsPerRow);
+      const col = barIdx % barsPerRow;
+      const x = col * barWidth;
+      const y = 40 + row * staveHeight;
 
       const stave = new Stave(x, y, barWidth);
-
-      if (index === 0) {
+      if (barIdx === 0) {
         stave.addClef('treble').addTimeSignature('4/4');
       }
-
       stave.setContext(context).draw();
 
-      const vexNotes = noteEventsToVexflowNotes(barNotes);
+      // Highlight logic using your condition
+      const highlightedNotes: HighlighedNote[] = barNotes.map((entry) => {
+        const note: HighlighedNote = { ...entry.event };
+
+        if (clockTick >= entry.time.start && clockTick <= entry.time.end) {
+          note.shouldHighlighted = true;
+          console.log(`✅ Highlighting note ${note.note} at tick ${clockTick}`);
+        }
+
+        return note;
+      });
+
+      const vexNotes = noteEventsToVexflowNotes(highlightedNotes, globalNoteIndex);
+      globalNoteIndex += barNotes.length;
+
       if (vexNotes.length === 0) return;
 
       const voice = new Voice({ numBeats: 4, beatValue: 4 });
-      voice.setStrict(false);
-      voice.addTickables(vexNotes);
+      voice.setStrict(false).addTickables(vexNotes);
 
       const beams = Beam.generateBeams(vexNotes);
-
       const formatter = new Formatter();
       formatter.joinVoices([voice]).format([voice], barWidth - 10);
+
       voice.draw(context, stave);
-      
-      vexNotes.forEach((note) => {
-        const id = (note as any).customId;
-        const el = (note as any).attrs?.el as SVGElement | null;
-        if (el && id) {
-          el.setAttribute('id', id);
-        }
-      });
-
       beams.forEach((beam) => beam.setContext(context).draw());
-
-      // Draw final barline only for the last bar
-      if (index === totalBars - 1) {
-        const barlineX = stave.getX() + stave.getWidth();
-        const topY = stave.getYForLine(0);
-        const bottomY = stave.getYForLine(4);
-        context.beginPath();
-        context.moveTo(barlineX, topY);
-        context.lineTo(barlineX, bottomY);
-        context.stroke();
-      }
     });
 
-  }, [notes, generationOptions, visible]);
+  }, [latestGeneratedNotes, generationOptions, visible, playbackClock]);
 
-  function highlightNote(noteId: string) {
-    const el = document.getElementById(noteId);
-    if (el) {
-      el.classList.add('highlight');
-      setTimeout(() => el.classList.remove('highlight'), 200); // Highlight duration
-    }
-  }
-  
-  function playNotes() {
-    const bpm = 120;
-    const ticksPerQuarter = 96;
-    const msPerTick = (60 / bpm) * 1000 / ticksPerQuarter;
-  
-    let time = 0;
-    let noteIndex = 0;
-  
-    for (const note of notes) {
-      time += note.deltaTime;
-      const noteId = `note-${noteIndex}`;
-      setTimeout(() => highlightNote(noteId), time * msPerTick);
-      noteIndex++;
-    }
-  }  
-
-  //return <div ref={containerRef} className="sheet-music-container"/>;
   return (
     <>
       <div id="item-header" onClick={() => setVisible((v) => !v)}>
         <div>GENERATED SOLO</div>
-        <div>
-          <ChevronRight
-            size={11}
-            style={{
-              transform: visible ? 'rotate(90deg)' : 'rotate(0deg)',
-              transition: 'transform 0.3s ease',
-            }}
-          />
-        </div>
+        <ChevronRight
+          size={11}
+          style={{
+            transform: visible ? 'rotate(90deg)' : 'rotate(0deg)',
+            transition: 'transform 0.3s ease',
+          }}
+        />
       </div>
-      {visible && 
-        <div ref={containerRef} className="sheet-music-container" />
-      }
-
+      {visible && <div ref={containerRef} className="sheet-music-container" />}
     </>
   );
-};
+}
 
 export default SheetMusic;

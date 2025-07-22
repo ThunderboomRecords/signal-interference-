@@ -46,6 +46,10 @@ const ipcApi = {
       (_event, status) => callback(status)
     ),
     generate: () => ipcRenderer.invoke('sequencer:generate'),
+    onClock: (callback: (currentTime: number) => void) => ipcRenderer.on(
+      'sequencer:playbackClock',
+      (_event, cTime) => callback(cTime)
+    )
   },
 
   // set

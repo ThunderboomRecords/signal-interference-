@@ -5,6 +5,8 @@ export default function useMedia() {
   const { project, updateProject } = useProject();
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackClock, setCurrentPlaybackClock] = useState(0);
+
   // recording
   // playing
   // generating
@@ -18,6 +20,9 @@ export default function useMedia() {
     window.electronApi.sequencer.onPlaybackStatus((status: boolean) => {
       setIsPlaying(status);
     });
+    window.electronApi.sequencer.onClock((clock) => {
+      setCurrentPlaybackClock(clock);
+    })
   }, []);
   const stopRecording = () => {
     window.electronApi.sequencer.stopRecording();
@@ -51,5 +56,6 @@ export default function useMedia() {
     isPlaying,
     startPlayback,
     stopPlayback,
+    playbackClock,
   }
 }

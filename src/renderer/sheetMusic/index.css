@@ -23,3 +23,9 @@
   border-color: #444;
   background-color: #222;
 }
+
+.highlighted {
+  fill:  rgb(69, 56, 245) !important;
+  stroke:  rgb(69, 56, 245) !important;
+  transition: fill 0.5s ease;
+}

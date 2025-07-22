@@ -2,8 +2,10 @@ import { StaveNote, Accidental } from 'vexflow';
 import { NoteEvent } from 'src/main/types';
 import { midiToVexflowKey, ticksToVexflowDuration } from '../../main/helpers';
 import { GenerationOptions } from 'src/main/types';
-
-export function noteEventsToVexflowNotes(noteEvents: NoteEvent[], startIndex = 0): StaveNote[] {
+export interface HighlighedNote extends NoteEvent {
+  shouldHighlighted?: boolean;
+}
+export function noteEventsToVexflowNotes(noteEvents: HighlighedNote[], startIndex = 0): StaveNote[] {
   return noteEvents.map((event, i) => {
     const key = midiToVexflowKey(event.note);
     const duration = ticksToVexflowDuration(event.duration);
@@ -21,9 +23,14 @@ export function noteEventsToVexflowNotes(noteEvents: NoteEvent[], startIndex = 0
       staveNote.addModifier(new Accidental(accidental), 0);
     }
 
-    // Assign a custom ID we can later use to find the rendered SVG element
-    (staveNote as any).customId = `note-${startIndex + i}`;
-
+    // Assign ID to be attached to the rendered SVG element
+    const id = `note-${startIndex + i}`;
+    staveNote.setAttribute('id', `note-${startIndex + i}`);
+    // TODO: add highlight on clock, start time and duration.
+    if(event.shouldHighlighted) {
+      staveNote.addClass('highlighted');
+      staveNote.setStyle({fillStyle: 'rgb(69, 56, 245)', strokeStyle: 'rgb(69, 56, 245)',
+  })    }
     return staveNote;
   });
 }
