@@ -29,7 +29,7 @@ export default function MediaControls() {
           }
         }}
       >
-        <Play />Play
+        <Play />PLAY
       </button>
       <button
         id="stopButton"
@@ -38,7 +38,7 @@ export default function MediaControls() {
             stopPlayback();
           }
         }}
-      ><Square /> Stop
+      ><Square /> STOP
       </button>
       <button id="recordButton"
         className={`${isRecording && 'active-button'}`}
@@ -51,7 +51,7 @@ export default function MediaControls() {
             startRecording();
           }
         }}
-      ><Circle />Record</button>
+      ><Circle />RECORD</button>
       <button
         id="generateButton"
 
@@ -59,7 +59,7 @@ export default function MediaControls() {
           e.preventDefault();
           generate();
         }}
-      ><Zap />Generate</button>
+      ><Zap />GENERATE</button>
       <Input className="record-length-input"
         type='number'
         placeholder="Recording Length"

@@ -1,19 +1,21 @@
 import { StaveNote, Accidental } from 'vexflow';
 import { NoteEvent } from 'src/main/types';
 import { midiToVexflowKey, ticksToVexflowDuration } from '../../main/helpers';
+import { GenerationOptions } from 'src/main/types';
+export interface HighlighedNote extends NoteEvent {
+  shouldHighlighted?: boolean;
+}
+export function noteEventsToVexflowNotes(noteEvents: HighlighedNote[], startIndex = 0): StaveNote[] {
+  return noteEvents.map((event, i) => {
+    const key = midiToVexflowKey(event.note);
+    const duration = ticksToVexflowDuration(event.duration);
 
-export function noteEventsToVexflowNotes(noteEvents: NoteEvent[]): StaveNote[] {
-  return noteEvents.map(event => {
-    const key = midiToVexflowKey(event.note); // e.g., "f#/4"
-    const duration = ticksToVexflowDuration(event.duration); // e.g., "q"
-
-    const noteName = key.split('/')[0]; // "f#", "bb"
-    const octave = key.split('/')[1];   // "4"
+    const noteName = key.split('/')[0];
+    const octave = key.split('/')[1];
     const accidental = getAccidentalFromKey(noteName);
-    const cleanKey = noteName.replace(/[#b]/, '') + '/' + octave;
 
     const staveNote = new StaveNote({
-      keys: [key],  // e.g., "f/4"
+      keys: [key],
       duration,
     });
 
@@ -21,6 +23,14 @@ export function noteEventsToVexflowNotes(noteEvents: NoteEvent[]): StaveNote[] {
       staveNote.addModifier(new Accidental(accidental), 0);
     }
 
+    // Assign ID to be attached to the rendered SVG element
+    const id = `note-${startIndex + i}`;
+    staveNote.setAttribute('id', `note-${startIndex + i}`);
+    // TODO: add highlight on clock, start time and duration.
+    if(event.shouldHighlighted) {
+      staveNote.addClass('highlighted');
+      staveNote.setStyle({fillStyle: 'rgb(69, 56, 245)', strokeStyle: 'rgb(69, 56, 245)',
+  })    }
     return staveNote;
   });
 }
@@ -42,6 +52,29 @@ export function getFirstFourBars(noteEvents: NoteEvent[], ticksPerQuarter = 96):
     if (accumulatedTicks > maxTicks) break;
     result.push(note);
   }
+
+  return result;
+}
+
+export function getFirstNBars(
+  noteEvents: NoteEvent[],
+  generationOptions: GenerationOptions,
+  ticksPerQuarter = 96
+): NoteEvent[] {
+  if(!noteEvents || noteEvents.length === 0 ) {
+    return [];
+  }
+  const barsToGenerate = generationOptions?.barsToGenerate ?? 4; // default to 4 if undefined
+  const maxTicks = ticksPerQuarter * 4 * barsToGenerate; // 4/4 time assumed
+  let accumulatedTicks = 0;
+
+  const result: NoteEvent[] = [];
+
+  noteEvents.forEach((note) =>{
+    accumulatedTicks += note.deltaTime;
+    if (accumulatedTicks > maxTicks) return;
+    result.push(note);
+  });
 
   return result;
 }

@@ -2,8 +2,8 @@ import { createRoot } from "react-dom/client";
 import GeneralControls from "../generalControls";
 import Songs from "../songs";
 import SheetMusic from "../sheetMusic";
+import SaveExport from "../saveExport";
 import './index.css';
-import useProject from "../lib/projectHook";
 /*
  * TODO: 
  *  - Midi IO indicators
@@ -17,16 +17,16 @@ const testNoteEvents = [
   { note: 64, deltaTime: 144, duration: 24 },
 ];
 
-
 export default function App() {
-  const { getLatestGeneratedNotes } = useProject();
-  const notes = getLatestGeneratedNotes();
 
   return (
-    <div id="app-container">
+    <div id="general-controls-header">
       <GeneralControls />
+      <div id="app-container">
+      <SheetMusic />
       <Songs />
-      <SheetMusic notes={notes ?? []} />
+      <SaveExport />
+      </div>
     </div>
   );
 }

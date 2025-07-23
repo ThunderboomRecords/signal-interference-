@@ -6,53 +6,74 @@
 #GeneralControls {
   width: 100%;
   min-height: 2em;
-  padding-top: 1em;
+  padding: 1em;
   display: flex;
   flex-direction: row;
+  justify-content: center;
   gap: 16px;
+  align-items: center;
+  border-width: 0.5px;
+  border-color: #444;
+}
+
+
+#MidiSelectGroup {
+  gap: 8px;  
+  min-height: 2em;
+  display: flex;
+  flex-direction: row;
+}
+
+#VerticalLine{
+  border-left: 1.5px solid black; 
+  height: 36px; 
 }
 
 .midi-selector {
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-bottom: 8px;
+  color: white;
+  margin-right: 0.5rem;
 }
 
 .midi-selector label {
   display: flex;
   margin-right: 0.5rem;
+  color: white;
 }
 
 #MediaControls {
   display: flex;
   flex-direction: row;
+  color: white;
+  font-size: 14px;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
 
   & button {
     padding: 8px 16px;
-    border-radius: 4px;
-    background-color: var(--color-button-background, #f0f0f0);
-    color: var(--color-button-foreground, #333);
-    border: none;
+    border-radius: 2px;
+    background-color: #111;
+    color: white;
     cursor: pointer;
     transition: background-color 0.3s ease;
     display: flex;
     justify-content: column;
+    align-items: center;
     text-align: center;
     gap: 8px;
 
     &:hover {
-      background-color: var(--color-button-hover-background, #e0e0e0);
+      background-color: #444;
     }
   }
 }
 
 .active-button {
-  border: 1px solid black !important;
+  border: 1px solid rgb(69, 56, 245) !important;
 }
 
 .active-button svg {
-  fill: black;
+  fill: rgb(69, 56, 245) !important;
 }

@@ -7,6 +7,8 @@ export interface MediaState {
   isPlaying: boolean;
   setIsRecording: (isRecording: boolean) => void;
   setIsPlaying: (isPlaying: boolean) => void;
+  playbackClock: number;
+  setPlaybackClock:(clock: number) => void;
 }
 
 const useMediaStore = create<MediaState>()((set) => {
@@ -16,6 +18,9 @@ const useMediaStore = create<MediaState>()((set) => {
   window.electronApi.sequencer.onPlaybackStatus((status: boolean) => {
     useMediaStore.getState().setIsPlaying(status);
   });
+      window.electronApi.sequencer.onClock((clock) => {
+      useMediaStore.getState().setPlaybackClock(clock);
+    })
 
   return {
     isRecording: false,
@@ -30,6 +35,11 @@ const useMediaStore = create<MediaState>()((set) => {
       newState.isRecording = isRecording;
       return newState;
     }),
+    setPlaybackClock:(clock: number) => set((state) => {
+    const newState = { ...state };
+      newState.playbackClock = clock;
+      return newState;
+    }),
 
   };
 });
@@ -38,7 +48,7 @@ const useMediaStore = create<MediaState>()((set) => {
 
 export default function useMedia() {
   const { project, updateProject } = useProject();
-  const { isRecording, isPlaying } = useMediaStore();
+  const { isRecording, isPlaying, playbackClock } = useMediaStore();
   // recording
   // playing
   // generating
@@ -77,5 +87,6 @@ export default function useMedia() {
     isPlaying,
     startPlayback,
     stopPlayback,
+    playbackClock,
   }
 }

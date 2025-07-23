@@ -29,6 +29,7 @@ function RenderSongs(props: {
             onChange={(e) => {
               onChange(e);
             }}
+            index={index}
           />
         ))
       }
@@ -46,14 +47,20 @@ export default function Songs() {
   } = useProject();
   return (
     <>
+    <div id="item-header">
+      ALL SONGS
+    </div>
+    <div id='outerContainer'>
       <table id='songContainer'>
         <thead id='song-labels'>
-          <tr>
-            <td>Titel</td>
-            <td>Midi Input</td>
+          <tr id='information'>
+            <td>#</td>
+            <td>Song Title</td>
+            <td>Midi Input File</td>
             <td>Markov Order</td>
-            <td>Generatie lengte</td>
-            <td>Midi Selectie Command</td>
+            <td>Generation Length</td>
+            <td>Midi Selection Message</td>
+            <td>Delete</td>
           </tr>
         </thead>
         <tbody id='songs-container'>
@@ -67,19 +74,16 @@ export default function Songs() {
             onDelete={(song: Partial<Song>) => { deleteSong(song); }}
           />
         </tbody>
-        <tfoot>
-          <tr>
-            <td>
-              <Button
-                id='addSongButton'
-                onClick={async () => {
-                  addSong();
-                }}
-              >+ Add Song</Button>
-            </td>
-          </tr>
-        </tfoot>
       </table >
+    </div>
+    <div id='bottom-button'>
+      <Button
+        id='addSongButton'
+        onClick={async () => {
+          addSong();
+        }}
+      >+ Add New Song</Button>
+    </div>
     </>
   )
 }

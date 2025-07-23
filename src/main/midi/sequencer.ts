@@ -18,6 +18,7 @@ function calculateBPM(beatTimes?: number[]): number | undefined {
 export type RecordingCallback = (noteEvents: NoteEvent[]) => void;
 export type PlayingCallback = () => void;
 export type CCCallback = (controllerCommand: number, data: number) => void;
+export type PlayingClockCallback = (clock: number) => void;
 interface ScheduledNote {
   note: number,
   startTick: number,
@@ -51,6 +52,7 @@ export default class Sequencer {
   startPlayingTime: number;
   playbackEvents: ScheduledNote[];
   stopPlaybackCallback: PlayingCallback | undefined;
+  playbackClockCallback: PlayingClockCallback | undefined;
   stopPlayingOnBeat: number;
   noteOnPlayingEvents: Map<number, number>;
   outputChannel: number;
@@ -248,7 +250,9 @@ export default class Sequencer {
 
     this.noteOnPlayingEvents.set(note, velocity);
   }
-
+  setPlaybackClockCallback(callback: PlayingClockCallback) {
+    this.playbackClockCallback = callback;
+  }
   startPlayback(events: NoteEvent[], callback?: PlayingCallback) {
     this.stopPlaybackCallback = callback;
     let accumulatedTicks = 0;
@@ -297,7 +301,12 @@ export default class Sequencer {
     if (this.stopPlayingOnBeat > 0 && this.clockCount >= this.stopPlayingOnBeat) {
       this.stopPlayback();
     }
+    
     const currentTime = this.clockCount - this.startPlayingTime;
+    
+    if (this.playbackClockCallback) {
+      this.playbackClockCallback(currentTime);
+    }
     this.playbackEvents.forEach((event) => {
       if (event.startTick === currentTime) {
         this.noteOn(event.note);
