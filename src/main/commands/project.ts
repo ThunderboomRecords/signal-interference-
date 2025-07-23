@@ -8,7 +8,6 @@ export default function init() {
     return stripProjectForRenderer(getCurrentProject());
   });
   ipcMain.handle('project:update', (_event, project: Partial<Project>) => {
-    console.log('updating project', project);
     return updateProject(project).then(async (proj) => { return stripProjectForRenderer(proj); });
   });
   ipcMain.handle('project:load', (_event, path: string) => {
