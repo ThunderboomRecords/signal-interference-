@@ -33,8 +33,7 @@ function SheetMusic() {
   const ticksPerQuarter = 96;
   const midiClockTickPerQuarter = 24;
   const tempo = 120; // optionally make this dynamic later
-  const clockTick = playbackClock * ticksPerQuarter/ midiClockTickPerQuarter;
-  console.log({clockTick});
+  const clockTick = playbackClock * ticksPerQuarter / midiClockTickPerQuarter;
 
   useEffect(() => {
     if (!visible) return;
@@ -94,19 +93,19 @@ function SheetMusic() {
       }
       stave.setContext(context).draw();
 
-      // Highlight logic using your condition
-      const highlightedNotes: HighlighedNote[] = barNotes.map((entry) => {
-        const note: HighlighedNote = { ...entry.event };
+      // will not do this as this takes to much of a rendering role
+      // // Highlight logic using your condition
+      // const highlightedNotes: HighlighedNote[] = barNotes.map((entry) => {
+      //   const note: HighlighedNote = { ...entry.event };
+      //
+      //   if (clockTick >= entry.time.start && clockTick <= entry.time.end) {
+      //     note.shouldHighlighted = true;
+      //   }
+      //
+      //   return note;
+      // });
 
-        if (clockTick >= entry.time.start && clockTick <= entry.time.end) {
-          note.shouldHighlighted = true;
-          console.log(`✅ Highlighting note ${note.note} at tick ${clockTick}`);
-        }
-
-        return note;
-      });
-
-      const vexNotes = noteEventsToVexflowNotes(highlightedNotes, globalNoteIndex);
+      const vexNotes = noteEventsToVexflowNotes(barNotes.map(e => e.event));
       globalNoteIndex += barNotes.length;
 
       if (vexNotes.length === 0) return;
@@ -122,7 +121,7 @@ function SheetMusic() {
       beams.forEach((beam) => beam.setContext(context).draw());
     });
 
-  }, [latestGeneratedNotes, generationOptions, visible, playbackClock]);
+  }, [latestGeneratedNotes, generationOptions, visible]);
 
   return (
     <>

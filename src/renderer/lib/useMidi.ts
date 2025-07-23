@@ -23,7 +23,6 @@ export default function useMidi() {
       setOutputPort(value);
     });
     window.electronApi.midiConfiguration.onMidiDawInput((value: MidiInterfaceInfo) => {
-      console.log(value);
       setDawPort(value);
     });
 
