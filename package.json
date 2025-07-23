@@ -1,8 +1,8 @@
 {
-  "name": "open-culture-tech-play-ai",
-  "productName": "open-culture-tech-play-ai",
+  "name": "Signal Interference",
+  "productName": "Signal Interference",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Signal interference. An app for performing personalised solo's with AI.",
   "main": ".vite/build/index.js",
   "scripts": {
     "start": "electron-forge start",

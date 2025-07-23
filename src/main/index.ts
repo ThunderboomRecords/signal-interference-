@@ -19,6 +19,7 @@ const createWindow = () => {
     webPreferences: {
       preload: path.join(__dirname, 'preload/index.js'),
     },
+    icon: path.join(__dirname, 'assets/images/icon.png')
   });
 
   // and load the index.html of the app.
@@ -57,7 +58,9 @@ const createWindow = () => {
   Menu.setApplicationMenu(menu);
 
   // Open theDevTools.
-  mainWindow.webContents.openDevTools();
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    mainWindow.webContents.openDevTools();
+  }
 
   mainApp.init(mainWindow);
   mainWindow.on('ready-to-show', () => {
