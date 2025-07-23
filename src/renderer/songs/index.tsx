@@ -11,7 +11,7 @@ function RenderSongs(props: {
   songs: Song[],
   selectSong: (song: Song) => void,
   activeSongId: string,
-  onChange: (songs: Song[]) => void,
+  onChange: (songs: Song) => void,
   onDelete: (song: Partial<Song>) => void,
 }) {
   const { songs, selectSong, activeSongId, onChange, onDelete } = props;
@@ -27,9 +27,7 @@ function RenderSongs(props: {
             onSelect={() => selectSong(song)}
             onDelete={onDelete}
             onChange={(e) => {
-              const newSongs = [...songs];
-              newSongs[index] = { ...newSongs[index], ...e };
-              onChange(newSongs);
+              onChange(e);
             }}
           />
         ))
@@ -43,7 +41,8 @@ export default function Songs() {
     addSong,
     updateSongs,
     deleteSong,
-    selectSong
+    selectSong,
+    updateSong,
   } = useProject();
   return (
     <>
@@ -63,7 +62,7 @@ export default function Songs() {
             selectSong={selectSong}
             activeSongId={project?.activeSongId}
             onChange={(songs) => {
-              updateSongs(songs);
+              updateSong(songs);
             }}
             onDelete={(song: Partial<Song>) => { deleteSong(song); }}
           />

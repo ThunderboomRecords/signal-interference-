@@ -189,7 +189,7 @@ import StopWatch from '../helpers/stopwatch';
 export async function setActiveSong(id: string): Promise<Partial<ProjectI>> {
   const totalTime = new StopWatch();
   // nothing changed
-  if(currentProject.activeSongId === id) {
+  if (currentProject.activeSongId === id) {
     return {};
   }
   currentProject.activeSongId = id;

@@ -1,24 +1,50 @@
 import { useEffect, useState } from "react";
+import { create } from "zustand";
 import useProject from "./projectHook";
+
+export interface MediaState {
+  isRecording: boolean;
+  isPlaying: boolean;
+  setIsRecording: (isRecording: boolean) => void;
+  setIsPlaying: (isPlaying: boolean) => void;
+}
+
+const useMediaStore = create<MediaState>()((set) => {
+  window.electronApi.sequencer.onRecordingStatus((status: boolean) => {
+    useMediaStore.getState().setIsRecording(status);
+  });
+  window.electronApi.sequencer.onPlaybackStatus((status: boolean) => {
+    useMediaStore.getState().setIsPlaying(status);
+  });
+
+  return {
+    isRecording: false,
+    isPlaying: false,
+    setIsPlaying: (isPlaying: boolean) => set((state) => {
+      const newState = { ...state };
+      newState.isPlaying = isPlaying;
+      return newState;
+    }),
+    setIsRecording: (isRecording: boolean) => set((state) => {
+      const newState = { ...state };
+      newState.isRecording = isRecording;
+      return newState;
+    }),
+
+  };
+});
+
+
 
 export default function useMedia() {
   const { project, updateProject } = useProject();
-  const [isRecording, setIsRecording] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const { isRecording, isPlaying } = useMediaStore();
   // recording
   // playing
   // generating
   // stop
   // start
   // generation amount
-  useEffect(() => {
-    window.electronApi.sequencer.onRecordingStatus((status: boolean) => {
-      setIsRecording(status);
-    });
-    window.electronApi.sequencer.onPlaybackStatus((status: boolean) => {
-      setIsPlaying(status);
-    });
-  }, []);
   const stopRecording = () => {
     window.electronApi.sequencer.stopRecording();
   };

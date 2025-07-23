@@ -86,7 +86,7 @@ export default function SongBar(props: {
   selected: boolean,
   onSelect?: (song: Song) => void,
   onChange?: (song: Song) => void,
-  onDelete?: (song: Partial<Song>) => void,
+  onDelete?: (song: Song) => void,
 }) {
   const { song, selected, onSelect, onChange, onDelete } = props;
 
