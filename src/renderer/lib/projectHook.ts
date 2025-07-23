@@ -209,15 +209,16 @@ export default function useProject() {
     updateSong,
   } = useProjectStore();
 
+  const activeSong = project?.songs?.find(s => s.id === project.activeSongId);
   const getLatestGeneratedNotes = (): NoteEvent[] => {
     if (!project || !project.activeSongId || !project?.songs) return [];
-
-    const activeSong = project?.songs.find(s => s.id === project.activeSongId);
     if (!activeSong || !activeSong.history?.length) return [];
 
     const lastHistoryEntry = activeSong.history[activeSong.history.length - 1];
     return lastHistoryEntry?.output?.[0]?.notes ?? [];
   };
+  const latestGeneratedNotes = getLatestGeneratedNotes();
+  const generationOptions = activeSong?.generationOptions;
 
   return {
     project,
@@ -228,5 +229,7 @@ export default function useProject() {
     selectSong,
     getLatestGeneratedNotes,
     updateSong,
+    latestGeneratedNotes,
+    generationOptions,
   };
 }
