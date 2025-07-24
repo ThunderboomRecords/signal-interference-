@@ -5,8 +5,8 @@
   justify-content: center;
   background: #fff;
   opacity: 80%;
-  overflow-x: auto;          
-  overflow-y: visible;       
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 #item-header {
@@ -19,13 +19,13 @@
   padding-left: 24px;
   padding-right: 24px;
   height: 24px;
-  border-width: 0.5px; 
+  border-width: 1px;
   border-color: #444;
   background-color: #222;
 }
 
 .highlighted {
-  fill:  rgb(69, 56, 245) !important;
-  stroke:  rgb(69, 56, 245) !important;
+  fill: rgb(69, 56, 245) !important;
+  stroke: rgb(69, 56, 245) !important;
   transition: fill 0.5s ease;
 }

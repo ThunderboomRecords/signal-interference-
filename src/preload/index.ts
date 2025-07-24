@@ -1,7 +1,7 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 import { contextBridge, ipcRenderer } from 'electron';
-import { MidiInterfaceInfo, Project, Song, NoteEvent} from '../main/types';
+import { MidiInterfaceInfo, Project, Song, NoteEvent } from '../main/types';
 
 type MidiInterfaceCallback = (info: MidiInterfaceInfo) => void;
 
@@ -62,6 +62,8 @@ const ipcApi = {
     update: (project: Partial<Project>) => ipcRenderer.invoke('project:update', project),
     load: (path: string) => ipcRenderer.invoke('project:load', path),
     save: (path: string) => ipcRenderer.invoke('project:save', path),
+    loadWithDialog: () => ipcRenderer.invoke('project:openWithDialog'),
+    saveWithDialog: () => ipcRenderer.invoke('project:saveWithDialog'),
     addNewsong: () => ipcRenderer.invoke('project:newSong'),
     selectSong: (song: Partial<Song>) => ipcRenderer.invoke('project:selectSong', song),
     deleteSong: (song: Partial<Song>) => ipcRenderer.invoke('project:deleteSong', song),
@@ -69,6 +71,7 @@ const ipcApi = {
       'project:onUpdate',
       (_event, project) => callback(project)
     ),
+    saveHistory: () => ipcRenderer.invoke('project:saveHistory'),
   },
   // Added sheetmusic in the renderer
   sheetMusic: {

@@ -3,9 +3,9 @@
   padding-left: 24px;
   padding-right: 24px;
   background-color: #222;
-  border-top-width: 0.5px;
-  border-left-width: 0.5px;
-  border-right-width: 0.5px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+  border-right-width: 1px;
   border-color: #444;
 }
 
@@ -43,7 +43,7 @@
   padding-left: 24px;
   padding-right: 24px;
   height: 24px;
-  border-width: 0.5px; 
+  border-width: 1px;
   border-color: #444;
   background-color: #222;
 }
@@ -82,14 +82,14 @@
   & tr:nth-child(odd) {
     background-color: #444;
     border-color: #444;
-    border-width: 0.5px;
+    border-width: 1px;
 
   }
 
   & tr:nth-child(even) {
-    background-color:  #222;
+    background-color: #222;
     border-color: #444;
-    border-width: 0.5px;
+    border-width: 1px;
   }
 
   & tr {
@@ -108,6 +108,7 @@
 #addSongButton {
   border-radius: 2px;
   background-color: #111;
+
   &:hover {
     cursor: pointer;
   }
@@ -128,7 +129,7 @@
   cursor: pointer;
 }
 
-.delete-button button{
+.delete-button button {
   cursor: pointer;
 }
 
@@ -211,7 +212,7 @@
   padding-bottom: 4px;
   padding-right: 32px;
   padding-left: 32px;
-  border-bottom-width: 0.5px;
+  border-bottom-width: 1px;
   border-bottom-color: #444;
   background-color: #222;
 }

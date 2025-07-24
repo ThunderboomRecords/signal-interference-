@@ -1,5 +1,5 @@
 import { ipcMain, ipcRenderer } from 'electron';
-import { stripProjectForRenderer } from '../app';
+import { openProjectWithDialog, saveHistoryOfCurrentSongWithDialog, saveProjectWithDialog, stripProjectForRenderer } from '../app';
 import { addNewsong, deleteSong, getCurrentProject, loadProject, saveProject, setActiveSong, updateProject } from "../app/project";
 import { Project, Song } from '../types';
 
@@ -16,6 +16,12 @@ export default function init() {
   ipcMain.handle('project:save', (_event, path: string) => {
     return saveProject(path);
   });
+  ipcMain.handle('project:saveWithDialog', (_event) => {
+    return saveProjectWithDialog();
+  });
+  ipcMain.handle('project:openWithDialog', (event_) => {
+    return openProjectWithDialog();
+  })
   ipcMain.handle('project:newSong', (_event) => {
     const proj = addNewsong();
     return proj.then(async (proj) => { return stripProjectForRenderer(proj); });
@@ -26,4 +32,7 @@ export default function init() {
   ipcMain.handle('project:selectSong', (_event, song: Song) => {
     return setActiveSong(song.id);
   });
+  ipcMain.handle('project:saveHistory', (_event) => {
+    return saveHistoryOfCurrentSongWithDialog();
+  })
 }

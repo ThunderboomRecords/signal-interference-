@@ -12,21 +12,21 @@
   justify-content: center;
   gap: 16px;
   align-items: center;
-  border-width: 0.5px;
+  border-width: 1px;
   border-color: #444;
 }
 
 
 #MidiSelectGroup {
-  gap: 8px;  
+  gap: 8px;
   min-height: 2em;
   display: flex;
   flex-direction: row;
 }
 
-#VerticalLine{
-  border-left: 1.5px solid black; 
-  height: 36px; 
+#VerticalLine {
+  border-left: 1.5px solid black;
+  height: 36px;
 }
 
 .midi-selector {

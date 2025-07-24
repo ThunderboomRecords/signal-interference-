@@ -1,8 +1,11 @@
 #save-export-container {
     padding: 32px;
-    border-width: 0.5px;
+    border-width: 1px;
     border-color: #444;
     color: white;
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
 }
 
 #item-header {
@@ -15,7 +18,7 @@
     padding-left: 24px;
     padding-right: 24px;
     height: 24px;
-    border-width: 0.5px; 
+    border-width: 1px;
     border-color: #444;
     background-color: #222;
-  }
+}

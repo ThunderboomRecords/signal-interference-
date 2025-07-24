@@ -2,7 +2,7 @@ import Sequencer from "../midi/sequencer";
 import { getMidiPortNumberByName, midiPorts } from "../midi/io";
 import { ApplicationSettings, NoteEvent, Project, Song } from "../types";
 import HigherOrderMarkovChain from "../markov/model";
-import { parseMidiFile } from "../midi/fileIO";
+import { parseMidiFile, saveMidiFile } from "../midi/fileIO";
 import * as path from 'path'
 import { app, BrowserWindow, dialog } from "electron";
 import fs from 'fs/promises';
@@ -433,4 +433,19 @@ export async function saveProjectWithDialog() {
     filters: [{ name: 'JSON Files', extensions: ['json'] }],
   });
   saveProject(filePath);
+}
+export async function saveHistoryOfCurrentSongWithDialog() {
+
+  const currentSong = getCurrentSong();
+  const { filePath, canceled } = await dialog.showSaveDialog({
+    title: `Save history of ${currentSong.name}`,
+    properties: ['createDirectory', 'showOverwriteConfirmation'],
+  });
+  if (canceled) return;
+  if (currentSong.history.length === 0) return;
+  const saveFilePromises = currentSong.history.map((hist, i) => {
+    const fileName = `${filePath}-${i}-${hist.input.timestamp}.mid`;
+    return saveMidiFile(hist.input.notes, fileName);
+  });
+  return Promise.all(saveFilePromises);
 }
