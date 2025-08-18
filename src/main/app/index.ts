@@ -7,8 +7,10 @@ import * as path from 'path'
 import { app, BrowserWindow, dialog } from "electron";
 import fs from 'fs/promises';
 import { MAX_HISTORY_LENGTH, SETTINGS_FILENAME } from "../constants";
-import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setActiveSong, setSongChangeCallback, updateProject, updateSongInProject } from "./project";
+import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setActiveSong, setSongChangeCallback, updateSongInProject } from "./project";
+import * as ProjectState from './project';
 import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording, StopWatch } from "../helpers";
+
 export { loadProject, createProject, saveProject } from './project';
 
 let generatedOutput: NoteEvent[] = [];
@@ -33,19 +35,38 @@ export function stripProjectForRenderer(project: Partial<Project>) {
   return strippedProject;
 }
 
+
 function sendProjectUpdateToRenderer(project?: Partial<Project>) {
-  if (project) {
-    console.log('sending update to renderer', project);
-    mainWindow.webContents.send('project:onUpdate', project);
-  } else {
-    console.log('sending full project update to renderer');
-    const currentProject = getCurrentProject();
-    mainWindow.webContents.send('project:onUpdate', stripProjectForRenderer(currentProject));
+  const currentProject = getCurrentProject();
+  mainWindow.webContents.send('project:onUpdate', stripProjectForRenderer(currentProject));
+}
+
+
+export async function updateProject(project: Partial<Project | Project>) {
+  const stackTrace = new Error().stack;
+  const proj = await ProjectState.updateProject(project);
+  sendProjectUpdateToRenderer();
+  return proj;
+}
+export async function addNewSong() {
+  const proj = await ProjectState.addNewsong();
+  sendProjectUpdateToRenderer();
+  return proj;
+}
+
+export async function setActiveSong(id: string): Promise<Partial<Project>> {
+  const currentSong = getCurrentSong();
+  if (id === currentSong.id) {
+    return;
   }
+  const proj = await ProjectState.setActiveSong(id);
+
+  sendProjectUpdateToRenderer();
+  return proj;
 }
 
 export async function newProject() {
-  await createProject();
+  createProject();
   sendProjectUpdateToRenderer();
 }
 async function recordingCallback(notes: NoteEvent[]) {
@@ -208,15 +229,36 @@ function onSongChange(oldSong: Song, newSong: Song): Partial<Song> | undefined {
   return undefined;
 }
 
+interface SwitchSongState {
+  setActiveSongPromise?: Promise<void>,
+  updateSongInProjectPromise?: Promise<Partial<Song>>
+  mostRecentSongNumber?: number,
+}
+const switchSongState: SwitchSongState = {
+  setActiveSongPromise: undefined,
+  updateSongInProjectPromise: undefined,
+  mostRecentSongNumber: undefined,
+}
+// Note can take a while to complete resulting in race conditions sometimes
 async function switchSong(value: number) {
   const totalTime = new StopWatch();
   const proj = getCurrentProject();
   const song = proj.songs.find((song) => song.midiSelection.value === value);
   if (song) {
+    switchSongState.mostRecentSongNumber = value;
     await setActiveSong(song.id);
+    if (switchSongState.mostRecentSongNumber !== value) {
+      return;
+    }
     const songRes = onSongChange(song, song);
-    if (songRes) {
+    if (switchSongState.mostRecentSongNumber !== value) {
+      return;
+    }
+    if (songRes === switchSongState.mostRecentSongNumber) {
       await updateSongInProject({ ...song, ...songRes });
+    }
+    if (switchSongState.mostRecentSongNumber !== value) {
+      return;
     }
     sendProjectUpdateToRenderer({ activeSongId: song.id });
     // setup markov stuff
