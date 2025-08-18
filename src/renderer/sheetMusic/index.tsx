@@ -14,6 +14,7 @@ import {
 import './index.css';
 import useProject from '../lib/projectHook';
 import { ChevronRight } from 'lucide-react';
+import { debounce } from '../..//utils/debounce';
 
 interface NoteTime {
   note: number;
@@ -29,7 +30,7 @@ function SheetMusic() {
 
   const ticksPerQuarter = 96;
 
-  useEffect(() => {
+  const updateVisual = () => {
     if (!visible) return;
     const div = containerRef.current;
     if (!div) return;
@@ -99,13 +100,30 @@ function SheetMusic() {
       voice.draw(context, stave);
       beams.forEach((beam) => beam.setContext(context).draw());
     });
+  };
 
+  useEffect(() => {
+    updateVisual();
   }, [latestGeneratedNotes, generationOptions, visible]);
+
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(() => {
+      updateVisual();
+    });
+    if (containerRef) {
+      resizeObserver.observe(containerRef.current);
+    }
+    return () => resizeObserver.disconnect();
+  }, [containerRef])
+
+
+
+
   const containerStyle: CSSProperties = visible ? {} : { height: '0px', overflowY: 'hidden' };
 
   return (
     <>
-      <div id="item-header" onClick={() => setVisible((v) => !v)}>
+      <div id="item-header" onClick={() => setVisible((v) => !v)} >
         <div>GENERATED SOLO</div>
         <ChevronRight
           size={11}
