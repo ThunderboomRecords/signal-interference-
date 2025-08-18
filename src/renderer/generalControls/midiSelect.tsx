@@ -4,10 +4,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useEffect, useState } from "react";
-import { setDawInput } from "src/main/app";
-import { MidiInterfaceInfo } from "src/main/types";
+} from "../components/ui/select";
 import useMidi from "../lib/useMidi";
 import './index.css';
 
@@ -19,7 +16,6 @@ function MidiSelector(props: {
 }) {
   const { inputList, selectCallback, updateContent, currentInput } = props;
 
-  const value = (currentInput !== undefined && currentInput !== '') ? currentInput : undefined;
   return (
     <div className="select-wrapper">
       <Select
@@ -31,7 +27,7 @@ function MidiSelector(props: {
         </SelectTrigger>
         <SelectContent >
           {
-            inputList.map((inputName: string, index: number) => {
+            inputList.map((inputName: string) => {
               return (
                 <SelectItem key={inputName} value={inputName}>{inputName}</SelectItem>
               )

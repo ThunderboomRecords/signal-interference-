@@ -1,9 +1,8 @@
-import ToneJS, { Midi } from '@tonejs/midi';
+import { Midi } from '@tonejs/midi';
 import { Note } from '@tonejs/midi/dist/Note';
-const { Midi } = ToneJS;
 import * as fs from 'fs';
-import { CLOCKS_PER_BEAT, CLOCK_PER_BEAT_RESOLUTION } from '../constants';
-import type { NoteEvent } from './types';
+import { CLOCK_PER_BEAT_RESOLUTION } from '../constants';
+import type { NoteEvent } from '../types';
 
 
 function convertToClockTicks(ppqTicks: number, ppq: number) {
@@ -38,9 +37,6 @@ export async function parseMidiFile(filePath: string): Promise<NoteEvent[]> {
     const note = notes[i];
     const previousTime = i > 0 ? getNoteTickTime(midi, notes[i - 1]) : 0;
     const deltaTime = i > 0 ? getNoteTickTime(midi, note) - previousTime : 0;
-
-    const previousTimeS = i > 0 ? notes[i - 1].time : 0;
-    const deltaTimeS = note.time - previousTime;
 
     events.push({
       note: note.midi,

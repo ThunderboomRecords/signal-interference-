@@ -2,14 +2,13 @@ import Sequencer from "../midi/sequencer";
 import { getMidiPortNumberByName, midiPorts } from "../midi/io";
 import { ApplicationSettings, NoteEvent, Project, Song } from "../types";
 import HigherOrderMarkovChain from "../markov/model";
-import { parseMidiFile, saveMidiFile } from "../midi/fileIO";
+import { saveMidiFile } from "../midi/fileIO";
 import * as path from 'path'
 import { app, BrowserWindow, dialog } from "electron";
 import fs from 'fs/promises';
 import { MAX_HISTORY_LENGTH, SETTINGS_FILENAME } from "../constants";
 import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setActiveSong, setSongChangeCallback, updateProject, updateSongInProject } from "./project";
-import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording, getSongFromId, StopWatch } from "../helpers";
-import { createPortal } from "react-dom";
+import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording, StopWatch } from "../helpers";
 export { loadProject, createProject, saveProject } from './project';
 
 let generatedOutput: NoteEvent[] = [];
@@ -241,11 +240,11 @@ function registerCallbacks() {
   sequencer.setCCCallback(16, (_cc, data) => { sequencer.setBeatsPerBar(data) });
   sequencer.setCCCallback(31, (_cc, data) => { startRecording(data); });
   // Note 32 does not work for ableton for some reason
-  sequencer.setCCCallback(33, (_cc, _data) => { stopRecording(); });
+  sequencer.setCCCallback(33, () => { stopRecording(); });
   sequencer.setCCCallback(40, (_cc, data) => { generate(data) });
   // TODO: 41 for selecting generative base for now defaults to recorded thing
-  sequencer.setCCCallback(48, (_cc, _data) => { startPlayback(); })
-  sequencer.setCCCallback(49, (_cc, _data) => { stopPlayback(); })
+  sequencer.setCCCallback(48, () => { startPlayback(); })
+  sequencer.setCCCallback(49, () => { stopPlayback(); })
   sequencer.setCCCallback(56, (_cc, data) => { switchSong(data); })
 }
 
@@ -311,7 +310,7 @@ export async function writeSettingsToDisk(settings: ApplicationSettings) {
 
 type settingsCommand = (input: string, window: BrowserWindow) => void;
 const settingCommands: { [setting: string]: settingsCommand } = {
-  dawInput: (dawInput: string, window: BrowserWindow) => {
+  dawInput: (dawInput: string) => {
     const dawNo = getMidiPortNumberByName(dawInput, 'input');
     if (dawNo < 0) {
       // no input could be found
@@ -321,7 +320,7 @@ const settingCommands: { [setting: string]: settingsCommand } = {
     setDawInput(dawInput);
   },
 
-  midiInput: (midiInput: string, window: BrowserWindow) => {
+  midiInput: (midiInput: string) => {
     const midiInputNo = getMidiPortNumberByName(midiInput, 'input');
     if (midiInputNo < 0) {
       // no input could be found
@@ -331,7 +330,7 @@ const settingCommands: { [setting: string]: settingsCommand } = {
     setRecordingInput(midiInput);
   },
 
-  midiOutput: (midiOutput: string, window: BrowserWindow) => {
+  midiOutput: (midiOutput: string) => {
     const midiOutputNo = getMidiPortNumberByName(midiOutput, 'input');
     if (midiOutputNo < 0) {
       // no input could be found
@@ -368,7 +367,7 @@ const updateSettingFunctions: Record<keyof ApplicationSettings, (value: string) 
   midiOutput: setMidiOutput,
 }
 
-function isApplicationSettingsKey(key: any): boolean {
+function isApplicationSettingsKey(key: keyof ApplicationSettings): boolean {
   const keys: (keyof ApplicationSettings)[] = ['dawInput', 'midiInput', 'midiOutput'];
   if (typeof key !== 'string') {
     return false;

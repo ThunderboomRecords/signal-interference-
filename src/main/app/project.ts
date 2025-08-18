@@ -3,12 +3,21 @@
 // Active project is always stored in the most recent file
 import { app } from 'electron';
 import { ACTIVE_PROJECT_APP_DATA_FILENAME, DEFAULT_BEAT_PER_BAR } from '../constants';
-import { GenerationOptions, GenerationStemData, NoteHistory, Project as ProjectI, Song as SongI, TrainingData, History } from '../types';
+import {
+  GenerationOptions,
+  GenerationStemData,
+  Project as ProjectI,
+  Song as SongI,
+  TrainingData,
+  History,
+} from '../types';
 import * as path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
 import { getSongFromId } from '../helpers';
-import HigherOrderMarkovChain, { MarkovModelData } from '../markov/model';
+import { MarkovModelData } from '../markov/model';
+// eslint-disable-next-line import/no-named-as-default
+import StopWatch from '../helpers/stopwatch';
 
 
 export class Song implements SongI {
@@ -184,7 +193,6 @@ export async function deleteSong(song: Partial<Song>) {
   await updateProject(currentProject);
   return currentProject;
 }
-import StopWatch from '../helpers/stopwatch';
 
 export async function setActiveSong(id: string): Promise<Partial<ProjectI>> {
   const totalTime = new StopWatch();

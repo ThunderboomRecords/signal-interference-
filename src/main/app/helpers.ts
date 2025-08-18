@@ -45,8 +45,6 @@ export function splitNotesPerBar(notes: NoteEvent[], startBar: number, endBar?: 
     notesPerBar[bar].push(note);
   });
 
-  // concat bars
-  const selectedBars = notesPerBar.slice(startBar, endBar);
 
   const output = notesPerBar.reduce((total, bar) => total.concat(bar), []);
   // TODO: maybe check if we need to cap duration

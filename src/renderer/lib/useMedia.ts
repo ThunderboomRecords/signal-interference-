@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { create } from "zustand";
 import useProject from "./projectHook";
 
@@ -8,19 +7,19 @@ export interface MediaState {
   setIsRecording: (isRecording: boolean) => void;
   setIsPlaying: (isPlaying: boolean) => void;
   playbackClock: number;
-  setPlaybackClock:(clock: number) => void;
+  setPlaybackClock: (clock: number) => void;
 }
 
-const useMediaStore = create<MediaState>()((set) => {
+const useMediaStore = create<Partial<MediaState>>()((set) => {
   window.electronApi.sequencer.onRecordingStatus((status: boolean) => {
     useMediaStore.getState().setIsRecording(status);
   });
   window.electronApi.sequencer.onPlaybackStatus((status: boolean) => {
     useMediaStore.getState().setIsPlaying(status);
   });
-      window.electronApi.sequencer.onClock((clock) => {
-      useMediaStore.getState().setPlaybackClock(clock);
-    })
+  window.electronApi.sequencer.onClock((clock) => {
+    useMediaStore.getState().setPlaybackClock(clock);
+  })
 
   return {
     isRecording: false,
@@ -35,8 +34,8 @@ const useMediaStore = create<MediaState>()((set) => {
       newState.isRecording = isRecording;
       return newState;
     }),
-    setPlaybackClock:(clock: number) => set((state) => {
-    const newState = { ...state };
+    setPlaybackClock: (clock: number) => set((state) => {
+      const newState = { ...state };
       newState.playbackClock = clock;
       return newState;
     }),

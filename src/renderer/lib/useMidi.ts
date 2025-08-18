@@ -1,7 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { MidiInterfaceInfo } from "src/main/types";
-import useProject from "./projectHook";
+import { MidiInterfaceInfo } from "../../main/types";
 
 export default function useMidi() {
   const [dawPort, setDawPort] = useState<MidiInterfaceInfo | undefined>(undefined);

@@ -1,4 +1,3 @@
-import { Note } from "@tonejs/midi/dist/Note";
 import { MAX_HISTORY_LENGTH } from "../constants";
 import { NoteEvent, Song } from "../types";
 export { StopWatch } from "./stopwatch";
@@ -57,12 +56,12 @@ export function midiToVexflowKey(midiNote: number): string {
 export function ticksToVexflowDuration(ticks: number): string {
   if (ticks >= 192) return 'h';    // half note
   if (ticks >= 144) return 'qd';   // dotted quarter
-  if (ticks >= 96)  return 'q';    // quarter
-  if (ticks >= 72)  return '8d';   // dotted eighth
-  if (ticks >= 48)  return '8';    // eighth
-  if (ticks >= 36)  return '16d';  // dotted sixteenth
-  if (ticks >= 24)  return '16';   // sixteenth
-  if (ticks >= 12)  return '32';   // thirty-second
+  if (ticks >= 96) return 'q';    // quarter
+  if (ticks >= 72) return '8d';   // dotted eighth
+  if (ticks >= 48) return '8';    // eighth
+  if (ticks >= 36) return '16d';  // dotted sixteenth
+  if (ticks >= 24) return '16';   // sixteenth
+  if (ticks >= 12) return '32';   // thirty-second
   return '64';                     // very short fallback
 }
 

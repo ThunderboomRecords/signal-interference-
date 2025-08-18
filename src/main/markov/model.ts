@@ -1,5 +1,4 @@
 import { CLOCK_PER_BEAT_RESOLUTION, DEFAULT_MARKOV_ORDER } from "../constants";
-import { StopWatch } from "../helpers";
 import type { NoteEvent } from "../types";
 export function sequenceDistance(a: NoteEvent[], b: NoteEvent[]): number {
   let distance = 0;
@@ -84,7 +83,7 @@ export default class HigherOrderMarkovChain implements MarkovModelData {
         );
       }
 
-      const nextMap = this.transitions[order].get(key).next!;
+      const nextMap = this.transitions[order].get(key).next;
       const oldOne = nextMap.get(next) || { event: nextEvent, count: 0 };
       const newOne = { ...oldOne };
       newOne.count++;
@@ -148,7 +147,7 @@ export default class HigherOrderMarkovChain implements MarkovModelData {
 
     const result: NoteEvent[] = [...start];
     let current = [...start];
-    let currentTimeSum = start.reduce((sum, e: any) => sum + (e.deltaTime || 0), 0);
+    let currentTimeSum = start.reduce((sum, e) => sum + (e.deltaTime || 0), 0);
     console.log('generating bars');
     console.log(start);
 
@@ -246,14 +245,14 @@ export default class HigherOrderMarkovChain implements MarkovModelData {
     if (start.length < this.order) {
       throw new Error(`Start sequence must have at least ${this.order} elements`);
     }
-    const startTimeSum = start.reduce((sum, e: any) => sum + (e.deltaTime || 0), 0);
+    const startTimeSum = start.reduce((sum, e) => sum + (e.deltaTime || 0), 0);
     const startLength = start.length;
     const totalTargetTime = bars * beatsPerBar * CLOCK_PER_BEAT_RESOLUTION;
 
 
     const result: NoteEvent[] = [...start];
     let current = [...start];
-    let currentTimeSum = start.reduce((sum, e: any) => sum + (e.deltaTime || 0), 0);
+    let currentTimeSum = start.reduce((sum, e) => sum + (e.deltaTime || 0), 0);
 
     while (currentTimeSum - startTimeSum <= totalTargetTime) {
       let next: NoteEvent | undefined = undefined;
@@ -268,7 +267,7 @@ export default class HigherOrderMarkovChain implements MarkovModelData {
         break;
       }
       result.push(next);
-      currentTimeSum += (next as any).deltaTime || 0;
+      currentTimeSum += next.deltaTime || 0;
       current = [...current.slice(1), next];
     }
     return result.slice(startLength);

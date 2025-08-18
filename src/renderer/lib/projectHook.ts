@@ -1,5 +1,4 @@
-import { Project, Song, NoteEvent } from 'src/main/types';
-import { useCallback, useEffect, useState } from 'react';
+import { Project, Song, NoteEvent } from '../../main/types';
 import { debounce } from '../../utils/debounce';
 import { create } from 'zustand';
 
@@ -115,7 +114,6 @@ const useProjectStore = create<ProjectState>()((set) => {
   });
   window.electronApi.project.onProjectChange((proj) => {
     console.log('project change', { proj });
-    // FIXME: double check partial updates and make a better mechanism for this. Now seems to break sometimes
     useProjectStore.getState().setProject(proj)
   });
 
@@ -201,7 +199,6 @@ export default function useProject() {
   const {
     project,
     updateProject,
-    setProject,
     deleteSong,
     addSong,
     selectSong,

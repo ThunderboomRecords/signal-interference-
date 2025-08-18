@@ -1,11 +1,8 @@
-import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
+import { Button } from '../components/ui/button';
 import SongComponent from './song';
 import './index.css';
-import { GenerationStemData, Song, TrainingData } from 'src/main/types';
-import { addNewsong, Project } from 'src/main/app/project';
+import { Song, } from '../..//main/types';
 import useProject from '../lib/projectHook';
-import crypto from 'crypto';
 
 function RenderSongs(props: {
   songs: Song[],
@@ -38,52 +35,50 @@ function RenderSongs(props: {
 }
 export default function Songs() {
   const { project,
-    updateProject,
     addSong,
-    updateSongs,
     deleteSong,
     selectSong,
     updateSong,
   } = useProject();
   return (
     <>
-    <div id="item-header">
-      ALL SONGS
-    </div>
-    <div id='outerContainer'>
-      <table id='songContainer'>
-        <thead id='song-labels'>
-          <tr id='information'>
-            <td>#</td>
-            <td>Song Title</td>
-            <td>Midi Input File</td>
-            <td>Markov Order</td>
-            <td>Generation Length</td>
-            <td>Midi Selection Message</td>
-            <td>Delete</td>
-          </tr>
-        </thead>
-        <tbody id='songs-container'>
-          <RenderSongs
-            songs={project?.songs || []}
-            selectSong={selectSong}
-            activeSongId={project?.activeSongId}
-            onChange={(songs) => {
-              updateSong(songs);
-            }}
-            onDelete={(song: Partial<Song>) => { deleteSong(song); }}
-          />
-        </tbody>
-      </table >
-    </div>
-    <div id='bottom-button'>
-      <Button
-        id='addSongButton'
-        onClick={async () => {
-          addSong();
-        }}
-      >+ Add New Song</Button>
-    </div>
+      <div id="item-header">
+        ALL SONGS
+      </div>
+      <div id='outerContainer'>
+        <table id='songContainer'>
+          <thead id='song-labels'>
+            <tr id='information'>
+              <td>#</td>
+              <td>Song Title</td>
+              <td>Midi Input File</td>
+              <td>Markov Order</td>
+              <td>Generation Length</td>
+              <td>Midi Selection Message</td>
+              <td>Delete</td>
+            </tr>
+          </thead>
+          <tbody id='songs-container'>
+            <RenderSongs
+              songs={project?.songs || []}
+              selectSong={selectSong}
+              activeSongId={project?.activeSongId}
+              onChange={(songs) => {
+                updateSong(songs);
+              }}
+              onDelete={(song: Partial<Song>) => { deleteSong(song); }}
+            />
+          </tbody>
+        </table >
+      </div>
+      <div id='bottom-button'>
+        <Button
+          id='addSongButton'
+          onClick={async () => {
+            addSong();
+          }}
+        >+ Add New Song</Button>
+      </div>
     </>
   )
 }

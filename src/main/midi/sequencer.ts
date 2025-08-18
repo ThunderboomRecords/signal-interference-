@@ -168,8 +168,6 @@ export default class Sequencer {
     });
     return convertedResults;
   }
-  notesAbsoluteToRelative(notes: NoteEvent[]) {
-  }
   stopRecording() {
     this.recording.stopRecordingOnBeat = -1;
     this.recording.isRecording = false;
@@ -301,9 +299,9 @@ export default class Sequencer {
     if (this.stopPlayingOnBeat > 0 && this.clockCount >= this.stopPlayingOnBeat) {
       this.stopPlayback();
     }
-    
+
     const currentTime = this.clockCount - this.startPlayingTime;
-    
+
     if (this.playbackClockCallback) {
       this.playbackClockCallback(currentTime);
     }

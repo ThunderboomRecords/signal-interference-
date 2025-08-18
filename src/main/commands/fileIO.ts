@@ -1,5 +1,4 @@
-import { dialog, ipcMain, ipcRenderer } from "electron";
-import { loadProject } from "../app";
+import { dialog, ipcMain } from "electron";
 import { parseMidiFile } from "../midi/fileIO";
 import { NoteEvent } from '../types';
 

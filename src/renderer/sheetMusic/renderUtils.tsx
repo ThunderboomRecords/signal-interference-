@@ -1,7 +1,6 @@
 import { StaveNote, Accidental } from 'vexflow';
-import { NoteEvent } from 'src/main/types';
+import { NoteEvent, GenerationOptions } from '../..//main/types';
 import { midiToVexflowKey, ticksToVexflowDuration } from '../../main/helpers';
-import { GenerationOptions } from 'src/main/types';
 export interface HighlighedNote extends NoteEvent {
   shouldHighlighted?: boolean;
 }
@@ -11,7 +10,6 @@ export function noteEventsToVexflowNotes(noteEvents: HighlighedNote[], startInde
     const duration = ticksToVexflowDuration(event.duration);
 
     const noteName = key.split('/')[0];
-    const octave = key.split('/')[1];
     const accidental = getAccidentalFromKey(noteName);
 
     const staveNote = new StaveNote({
@@ -24,13 +22,14 @@ export function noteEventsToVexflowNotes(noteEvents: HighlighedNote[], startInde
     }
 
     // Assign ID to be attached to the rendered SVG element
-    const id = `note-${startIndex + i}`;
     staveNote.setAttribute('id', `note-${startIndex + i}`);
     // TODO: add highlight on clock, start time and duration.
-    if(event.shouldHighlighted) {
+    if (event.shouldHighlighted) {
       staveNote.addClass('highlighted');
-      staveNote.setStyle({fillStyle: 'rgb(69, 56, 245)', strokeStyle: 'rgb(69, 56, 245)',
-  })    }
+      staveNote.setStyle({
+        fillStyle: 'rgb(69, 56, 245)', strokeStyle: 'rgb(69, 56, 245)',
+      })
+    }
     return staveNote;
   });
 }
@@ -61,7 +60,7 @@ export function getFirstNBars(
   generationOptions: GenerationOptions,
   ticksPerQuarter = 96
 ): NoteEvent[] {
-  if(!noteEvents || noteEvents.length === 0 ) {
+  if (!noteEvents || noteEvents.length === 0) {
     return [];
   }
   const barsToGenerate = generationOptions?.barsToGenerate ?? 4; // default to 4 if undefined
@@ -70,7 +69,7 @@ export function getFirstNBars(
 
   const result: NoteEvent[] = [];
 
-  noteEvents.forEach((note) =>{
+  noteEvents.forEach((note) => {
     accumulatedTicks += note.deltaTime;
     if (accumulatedTicks > maxTicks) return;
     result.push(note);

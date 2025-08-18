@@ -1,4 +1,4 @@
-import { NoteEvent, Song } from "src/main/types";
+import { NoteEvent, Song } from "../..//main/types";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import {
@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@radix-ui/react-dialog"
 import { Trash2 } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 
 
 function FileUpload(props: {
@@ -54,31 +54,31 @@ function DeleteButton(props: { onClick: () => void }) {
   const { onClick } = props;
 
   return (
-    <span  className="delete-button">
-    <Dialog>
-      <form>
-        <DialogTrigger asChild>
-          <Button>
-            <Trash2 />
-          </Button>
-        </DialogTrigger>
-        <div className="dialog-wrapper">
-          <DialogContent className="sm:max-w-[425px] dialog-content">
-            <DialogTitle>Item verwijderen</DialogTitle>
-            <DialogDescription>
-              Weet je zeker dat je dit wil verwijderen?
-            </DialogDescription>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-              <Button onClick={onClick}>Verwijderen</Button>
-              <DialogClose asChild>
-                <Button>Annuleren</Button>
-              </DialogClose>
-            </div>
-          </DialogContent>
-        </div>
-      </form>
-    </Dialog >       
-  </span>
+    <span className="delete-button">
+      <Dialog>
+        <form>
+          <DialogTrigger asChild>
+            <Button>
+              <Trash2 />
+            </Button>
+          </DialogTrigger>
+          <div className="dialog-wrapper">
+            <DialogContent className="sm:max-w-[425px] dialog-content">
+              <DialogTitle>Item verwijderen</DialogTitle>
+              <DialogDescription>
+                Weet je zeker dat je dit wil verwijderen?
+              </DialogDescription>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                <Button onClick={onClick}>Verwijderen</Button>
+                <DialogClose asChild>
+                  <Button>Annuleren</Button>
+                </DialogClose>
+              </div>
+            </DialogContent>
+          </div>
+        </form>
+      </Dialog >
+    </span>
   );
 }
 

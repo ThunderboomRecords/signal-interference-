@@ -6,16 +6,14 @@ import {
   Formatter,
   Beam,
 } from 'vexflow';
-import { GenerationOptions, NoteEvent } from 'src/main/types';
+import { NoteEvent } from '../../main/types';
 import {
   noteEventsToVexflowNotes,
   getFirstNBars,
-  HighlighedNote,
 } from './renderUtils';
 import './index.css';
 import useProject from '../lib/projectHook';
 import { ChevronRight } from 'lucide-react';
-import useMedia from '../lib/useMedia';
 
 interface NoteTime {
   note: number;
@@ -25,15 +23,11 @@ interface NoteTime {
 
 function SheetMusic() {
   const { latestGeneratedNotes, generationOptions } = useProject();
-  const { isPlaying, playbackClock } = useMedia();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(true);
 
   const ticksPerQuarter = 96;
-  const midiClockTickPerQuarter = 24;
-  const tempo = 120; // optionally make this dynamic later
-  const clockTick = playbackClock * ticksPerQuarter / midiClockTickPerQuarter;
 
   useEffect(() => {
     if (!visible) return;
@@ -79,8 +73,6 @@ function SheetMusic() {
       });
     }
 
-    let globalNoteIndex = 0;
-
     bars.forEach((barNotes, barIdx) => {
       const row = Math.floor(barIdx / barsPerRow);
       const col = barIdx % barsPerRow;
@@ -93,20 +85,7 @@ function SheetMusic() {
       }
       stave.setContext(context).draw();
 
-      // will not do this as this takes to much of a rendering role
-      // // Highlight logic using your condition
-      // const highlightedNotes: HighlighedNote[] = barNotes.map((entry) => {
-      //   const note: HighlighedNote = { ...entry.event };
-      //
-      //   if (clockTick >= entry.time.start && clockTick <= entry.time.end) {
-      //     note.shouldHighlighted = true;
-      //   }
-      //
-      //   return note;
-      // });
-
       const vexNotes = noteEventsToVexflowNotes(barNotes.map(e => e.event));
-      globalNoteIndex += barNotes.length;
 
       if (vexNotes.length === 0) return;
 

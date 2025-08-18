@@ -1,4 +1,3 @@
-import { Note } from "@tonejs/midi/dist/Note";
 import { MarkovModelData } from "./markov/model";
 
 export type NoteSecondTiming = {
