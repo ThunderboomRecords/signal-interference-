@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, CSSProperties } from 'react';
 import {
   Renderer,
   Stave,
@@ -122,6 +122,7 @@ function SheetMusic() {
     });
 
   }, [latestGeneratedNotes, generationOptions, visible]);
+  const containerStyle: CSSProperties = visible ? {} : { height: '0px', overflowY: 'hidden' };
 
   return (
     <>
@@ -135,7 +136,7 @@ function SheetMusic() {
           }}
         />
       </div>
-      {visible && <div ref={containerRef} className="sheet-music-container" />}
+      <div ref={containerRef} className="sheet-music-container" style={containerStyle} />
     </>
   );
 }

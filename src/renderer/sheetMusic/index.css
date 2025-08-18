@@ -1,12 +1,13 @@
 .sheet-music-container {
   width: 100%;
-  height: 100%;
+  height: 600px;
   display: flex;
   justify-content: center;
   background: #fff;
   opacity: 80%;
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow-x: hidden;
+  overflow-y: auto;
+  transition: ease 0.3s height;
 }
 
 #item-header {
