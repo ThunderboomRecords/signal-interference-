@@ -5,7 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import useMidi from "../lib/useMidi";
+import useMidi from "../hooks/useMidi";
 import './index.css';
 
 function MidiSelector(props: {
@@ -64,7 +64,6 @@ function SingleSelector(props: {
 
 }
 
-// TODO: Add history for this so it remembers the configuration and default io config
 export default function MidiSelect() {
   const {
     dawPort,

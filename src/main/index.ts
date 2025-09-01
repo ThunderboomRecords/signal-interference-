@@ -1,3 +1,7 @@
+/* Main entry point for the application
+ * Creates windows and adds to the application menu's
+ * 
+* */
 import { app, BrowserWindow, Menu } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup'; // eslint-disable-line @typescript-eslint/no-var-requires

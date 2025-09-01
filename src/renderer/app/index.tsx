@@ -4,15 +4,11 @@ import Songs from "../songs";
 import SheetMusic from "../sheetMusic";
 import SaveExport from "../saveExport";
 import './index.css';
-/*
- * TODO: 
- *  - Midi IO indicators
- */
 
 export default function App() {
 
   return (
-    <div id="general-controls-header">
+    <div id="main">
       <GeneralControls />
       <div id="app-container">
         <SheetMusic />

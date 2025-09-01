@@ -1,7 +1,7 @@
 import { Play, Square, Circle, Zap } from "lucide-react";
 import { Input } from "../components/ui/input";
 import './index.css';
-import useMedia from '../lib/useMedia';
+import useMedia from '../hooks/useMedia';
 
 export default function MediaControls() {
   const { isRecording,

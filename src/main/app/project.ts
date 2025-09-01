@@ -15,9 +15,9 @@ import * as path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
 import { getSongFromId } from '../helpers';
-import { MarkovModelData } from '../markov/model';
+import { MarkovModelData } from '../markov';
 // eslint-disable-next-line import/no-named-as-default
-import StopWatch from '../helpers/stopwatch';
+import StopWatch from '../../utils/stopwatch';
 
 
 export class Song implements SongI {
@@ -117,7 +117,6 @@ export class Project implements ProjectI {
 
 let currentProject = new Project();
 
-// TODO: add a history of projects
 
 async function updateProjectInAppData(project: ProjectI) {
   const appDataPath = app.getPath('appData');

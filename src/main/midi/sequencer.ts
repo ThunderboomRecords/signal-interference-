@@ -100,9 +100,6 @@ export default class Sequencer {
     this.setDawInput(dawInput);
     this.setOutput(output);
   }
-  destructor() {
-    // TODO: check if it needs to make sense to open and close ports in here.
-  }
   private registerRecordingCallback() {
     console.log('registering callback');
     this.dawInput.on('message', (_deltaTime: number, message: Midi.MidiMessage) => {

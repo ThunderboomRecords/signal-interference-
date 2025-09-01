@@ -2,7 +2,7 @@ import { Button } from '../components/ui/button';
 import SongComponent from './song';
 import './index.css';
 import { Song, } from '../..//main/types';
-import useProject from '../lib/projectHook';
+import useProject from '../hooks/projectHook';
 
 function RenderSongs(props: {
   songs: Song[],

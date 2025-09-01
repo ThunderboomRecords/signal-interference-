@@ -12,9 +12,8 @@ import {
   getFirstNBars,
 } from './renderUtils';
 import './index.css';
-import useProject from '../lib/projectHook';
+import useProject from '../hooks/projectHook';
 import { ChevronRight } from 'lucide-react';
-import { debounce } from '../..//utils/debounce';
 
 interface NoteTime {
   note: number;

@@ -1,3 +1,4 @@
+// Commands to be used by renderer and the preload script
 import { ipcMain } from 'electron';
 import * as Midi from './midi';
 import * as FileIO from './fileIO';

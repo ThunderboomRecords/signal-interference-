@@ -1,4 +1,4 @@
-import { MarkovModelData } from "./markov/model";
+import { MarkovModelData } from "./markov";
 
 export type NoteSecondTiming = {
   deltaTime: number;

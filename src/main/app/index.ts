@@ -1,15 +1,16 @@
+// Main application logic. Maintains project state and updates the renderer accordingly.
 import Sequencer from "../midi/sequencer";
 import { getMidiPortNumberByName, midiPorts } from "../midi/io";
 import { ApplicationSettings, NoteEvent, Project, Song } from "../types";
-import HigherOrderMarkovChain from "../markov/model";
+import HigherOrderMarkovChain from "../markov";
 import { saveMidiFile } from "../midi/fileIO";
 import * as path from 'path'
 import { app, BrowserWindow, dialog } from "electron";
 import fs from 'fs/promises';
 import { MAX_HISTORY_LENGTH, SETTINGS_FILENAME } from "../constants";
-import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setActiveSong, setSongChangeCallback, updateSongInProject } from "./project";
+import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setSongChangeCallback, updateSongInProject } from "./project";
 import * as ProjectState from './project';
-import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording, StopWatch } from "../helpers";
+import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording } from "../helpers";
 
 export { loadProject, createProject, saveProject } from './project';
 
@@ -36,14 +37,13 @@ export function stripProjectForRenderer(project: Partial<Project>) {
 }
 
 
-function sendProjectUpdateToRenderer(project?: Partial<Project>) {
+function sendProjectUpdateToRenderer() {
   const currentProject = getCurrentProject();
   mainWindow.webContents.send('project:onUpdate', stripProjectForRenderer(currentProject));
 }
 
 
 export async function updateProject(project: Partial<Project | Project>) {
-  const stackTrace = new Error().stack;
   const proj = await ProjectState.updateProject(project);
   sendProjectUpdateToRenderer();
   return proj;
@@ -260,7 +260,7 @@ async function switchSong(value: number) {
     if (switchSongState.mostRecentSongNumber !== value) {
       return;
     }
-    sendProjectUpdateToRenderer({ activeSongId: song.id });
+    sendProjectUpdateToRenderer();
     // setup markov stuff
   } else {
     console.error('could not set song', value);

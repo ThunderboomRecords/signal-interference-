@@ -10,9 +10,11 @@
   border-color: #444;
 }
 
-#general-controls-header {
+#main {
   background-color: #222;
   border-color: #444;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 #preset-load-save-header {

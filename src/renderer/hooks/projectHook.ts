@@ -12,12 +12,6 @@ interface ProjectState {
   updateSongs: (songs: Song[]) => void;
   updateSong: (song: Song) => void;
 }
-const emptyProject: Project = {
-  songs: [],
-  lastSavePath: '',
-  activeSongId: '',
-  recordingLength: 0,
-};
 
 const emptySong: Song = {
   name: '',
@@ -77,29 +71,6 @@ function getChangedSongs(songs1: Song[], songs2: Song[]) {
   });
   return idSet;
 }
-function projectsAreDifferent(proj1: Project | undefined, proj2: Project | undefined) {
-  if (proj1 === undefined && proj2 !== undefined) {
-    return true;
-  }
-  if (proj2 === undefined && proj1 !== undefined) {
-    return true;
-  }
-
-
-  for (const key in emptyProject) {
-    if (key === 'song') {
-      // go per song
-
-    }
-    const proj1Info = JSON.stringify(proj1[key as keyof Project])
-    const proj2Info = JSON.stringify(proj2[key as keyof Project])
-    if (proj1Info !== proj2Info) {
-      return true;
-    }
-  }
-  return false;
-
-}
 
 function partrialProjectCompare(fullProject: Project | undefined, update: Partial<Project> | undefined) {
   if ((!fullProject && update) || (fullProject && !update)) {
@@ -148,8 +119,6 @@ const useProjectStore = create<ProjectState>()((set) => {
   });
   window.electronApi.project.onProjectChange((proj) => {
     const currentProject = useProjectStore.getState();
-    const projectUpdateString = JSON.stringify(proj, null, 2);
-    const currentProjectUpdateString = JSON.stringify(currentProject.project, null, 2);
     if (!partrialProjectCompare(currentProject.project, proj)) {
       return;
     }
@@ -172,7 +141,7 @@ const useProjectStore = create<ProjectState>()((set) => {
       if (partrialProjectCompare(state.project, proj)) {
         const newState = { ...state };
         newState.project = temp;
-        window.electronApi.project.update(proj).then((e) => {
+        window.electronApi.project.update(proj).then(() => {
           // useProjectStore.getState().setProject(e);
         });
         return newState;
