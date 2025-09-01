@@ -11,6 +11,7 @@ import { MAX_HISTORY_LENGTH, SETTINGS_FILENAME } from "../constants";
 import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setSongChangeCallback, updateSongInProject } from "./project";
 import * as ProjectState from './project';
 import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording } from "../helpers";
+import StopWatch from "../..//utils/stopwatch";
 
 export { loadProject, createProject, saveProject } from './project';
 
