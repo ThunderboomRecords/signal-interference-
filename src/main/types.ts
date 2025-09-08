@@ -26,8 +26,6 @@ export interface GenerationStemData {
   notes: NoteEvent[];
 }
 
-
-
 export interface NoteHistory {
   notes: NoteEvent[];
   timestamp: Date;
@@ -61,4 +59,14 @@ export interface Project {
   lastSavePath?: string;
   activeSongId?: string,
   recordingLength?: number;
+}
+
+export interface ScoredNote {
+  note: number;
+  deltaTime: number;
+  duration: number;
+  absoluteTime: number;
+  offset: number;
+  distanceToBeat: number;
+  score: number;
 }
