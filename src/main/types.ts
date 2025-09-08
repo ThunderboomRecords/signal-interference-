@@ -68,5 +68,8 @@ export interface ScoredNote {
   absoluteTime: number;
   offset: number;
   distanceToBeat: number;
+  tickOffset: number;
   score: number;
+  bar?: number;
+  beat?: number;
 }

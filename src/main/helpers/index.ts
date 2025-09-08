@@ -46,113 +46,6 @@ export function addNewGeneratedData(song: Song, notes: NoteEvent[]): Song {
 
 //New helper function to find the best timing offset
 
-export function findBestTimingOffset(
-  sequence: NoteEvent[],
-  maxOffset = CLOCK_PER_BEAT_RESOLUTION,
-  beatsPerBar = DEFAULT_BEAT_PER_BAR
-): {
-  bestOffset: number;
-  bestScore: number;
-  shiftedSequence: NoteEvent[];
-} {
-  const minOffset = -maxOffset;
-  const ticksPerBar = beatsPerBar * CLOCK_PER_BEAT_RESOLUTION;
-
-  // Build absolute time from deltaTime
-  let currentTime = 0;
-  const notesWithTime = sequence.map((note) => {
-    currentTime += note.deltaTime;
-    return {
-      ...note,
-      absoluteTime: currentTime,
-    };
-  });
-
-  // Print the original sequence
-  console.log("🎵 Original sequence:");
-  console.log("Idx\tNote\tDelta\tTime\tBar.Beat\t+Ticks");
-  console.log("--------------------------------------------------");
-  notesWithTime.forEach((note, index) => {
-    const tickInBar = note.absoluteTime % ticksPerBar;
-    const bar = Math.floor(note.absoluteTime / ticksPerBar);
-    const beat = Math.floor(tickInBar / CLOCK_PER_BEAT_RESOLUTION);
-    const subBeatTicks = tickInBar % CLOCK_PER_BEAT_RESOLUTION;
-    console.log(
-      `${index}\t${note.note}\t${note.deltaTime}\t${note.absoluteTime}\t${bar + 1}.${beat + 1}\t(+${subBeatTicks})`
-    );
-  });
-
-  // Scoring helper
-  function scoreSequence(offset: number): { average: number; scoredNotes: ScoredNote[] } {
-    const scored = notesWithTime.map((note) => {
-      const shiftedTime = note.absoluteTime + offset;
-      const ticksFromBeat = shiftedTime % CLOCK_PER_BEAT_RESOLUTION;
-      const distanceToBeat = Math.min(ticksFromBeat, CLOCK_PER_BEAT_RESOLUTION - ticksFromBeat);
-      const score = 1 - distanceToBeat / CLOCK_PER_BEAT_RESOLUTION;
-
-      return {
-        note: note.note,
-        deltaTime: note.deltaTime,
-        duration: note.duration,
-        absoluteTime: shiftedTime,
-        offset,
-        distanceToBeat,
-        score,
-      };
-    });
-
-    const total = scored.reduce((sum, n) => sum + n.score, 0);
-    return {
-      average: total / scored.length,
-      scoredNotes: scored,
-    };
-  }
-
-  // Try all offsets
-  let bestOffset = 0;
-  let bestScore = 0;
-  let bestScored: ScoredNote[] = [];
-
-  for (let offset = minOffset; offset <= maxOffset; offset++) {
-    const { average, scoredNotes } = scoreSequence(offset);
-    if (average > bestScore) {
-      bestOffset = offset;
-      bestScore = average;
-      bestScored = scoredNotes;
-    }
-  }
-
-  // 🖨️ Print best scoring sequence
-  console.log(`\n🎯 Best offset found: ${bestOffset} (Avg score: ${bestScore.toFixed(4)})`);
-  console.log("Idx\tNote\tDelta\tTime\tBar.Beat\t+Ticks\tOffset\tDist\tScore");
-  console.log("----------------------------------------------------------------------");
-
-  let previousTime = 0;
-  const shiftedSequence: NoteEvent[] = [];
-
-  bestScored.forEach((n, index) => {
-    const tickInBar = n.absoluteTime % ticksPerBar;
-    const bar = Math.floor(n.absoluteTime / ticksPerBar);
-    const beat = Math.floor(tickInBar / CLOCK_PER_BEAT_RESOLUTION);
-    const subBeatTicks = tickInBar % CLOCK_PER_BEAT_RESOLUTION;
-
-    const deltaTime = n.absoluteTime - previousTime;
-    shiftedSequence.push({ note: n.note, deltaTime, duration: n.duration, });
-    previousTime = n.absoluteTime;
-
-    console.log(
-      `${index}\t${n.note}\t${deltaTime}\t${n.absoluteTime}\t${bar + 1}.${beat + 1}\t(+${subBeatTicks})` +
-      `\t${n.offset >= 0 ? "+" : ""}${n.offset}\t${n.distanceToBeat}\t${n.score.toFixed(2)}`
-    );
-  });
-
-  return {
-    bestOffset,
-    bestScore,
-    shiftedSequence,
-  };
-}
-
 export function findBestTimingOffsetNearDownbeats(
   sequence: NoteEvent[],
   beatsPerBar = DEFAULT_BEAT_PER_BAR,
@@ -199,8 +92,11 @@ export function findBestTimingOffsetNearDownbeats(
             absoluteTime: note.absoluteTime,
             bar,
             beat,
-            tickOffset,
-            score: 0, // placeholder, will be computed later
+            tickOffset: tickOffset,
+            offset: 0, // will be set during scoring
+            distanceToBeat: 0, // will be set during scoring
+            duration: note.duration ?? 0, // ← optional chaining fallback
+            score: 0,
           };
         }
       }
