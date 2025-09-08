@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { Project, Song, NoteEvent } from '../../main/types';
 import { debounce } from '../../utils/debounce';
 import { create } from 'zustand';
@@ -226,13 +227,13 @@ export default function useProject() {
   } = useProjectStore();
 
   const activeSong = project?.songs?.find(s => s.id === project.activeSongId);
-  const getLatestGeneratedNotes = (): NoteEvent[] => {
+  const getLatestGeneratedNotes = useCallback( (): NoteEvent[] => {
     if (!project || !project.activeSongId || !project?.songs) return [];
     if (!activeSong || !activeSong.history?.length) return [];
 
-    const lastHistoryEntry = activeSong.history[activeSong.history.length - 1];
-    return lastHistoryEntry?.output?.[0]?.notes ?? [];
-  };
+    const lastHistoryEntry = activeSong.history.slice(-1)[0];
+    return lastHistoryEntry?.output?.slice(-1)[0]?.notes ?? [];
+  }, [project, activeSong, activeSong.history, activeSong.history?.[activeSong.history?.length - 1]]);
   const latestGeneratedNotes = getLatestGeneratedNotes();
   const generationOptions = activeSong?.generationOptions;
 

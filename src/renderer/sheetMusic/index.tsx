@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, CSSProperties } from 'react';
+import React, { useRef, useEffect, useState, CSSProperties, useCallback } from 'react';
 import {
   Renderer,
   Stave,
@@ -23,17 +23,15 @@ interface NoteTime {
 
 function SheetMusic() {
   const { latestGeneratedNotes, generationOptions } = useProject();
-
   const containerRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(true);
 
   const ticksPerQuarter = 96;
 
-  const updateVisual = () => {
+  const updateVisual = useCallback(() => {
     if (!visible) return;
     const div = containerRef.current;
     if (!div) return;
-
     div.innerHTML = '';
 
     const padding = 100;
@@ -99,7 +97,7 @@ function SheetMusic() {
       voice.draw(context, stave);
       beams.forEach((beam) => beam.setContext(context).draw());
     });
-  };
+  }, [latestGeneratedNotes, generationOptions, containerRef]);
 
   useEffect(() => {
     updateVisual();
