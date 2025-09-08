@@ -229,11 +229,11 @@ export default function useProject() {
   const activeSong = project?.songs?.find(s => s.id === project.activeSongId);
   const getLatestGeneratedNotes = useCallback( (): NoteEvent[] => {
     if (!project || !project.activeSongId || !project?.songs) return [];
-    if (!activeSong || !activeSong.history?.length) return [];
+    if (!activeSong || !activeSong?.history?.length) return [];
 
-    const lastHistoryEntry = activeSong.history.slice(-1)[0];
+    const lastHistoryEntry = activeSong?.history.slice(-1)[0];
     return lastHistoryEntry?.output?.slice(-1)[0]?.notes ?? [];
-  }, [project, activeSong, activeSong.history, activeSong.history?.[activeSong.history?.length - 1]]);
+  }, [project, activeSong, activeSong?.history, activeSong?.history?.[activeSong?.history?.length - 1]]);
   const latestGeneratedNotes = getLatestGeneratedNotes();
   const generationOptions = activeSong?.generationOptions;
 
