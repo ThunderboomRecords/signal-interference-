@@ -236,8 +236,7 @@ export default function useProject() {
   }, [project, activeSong, activeSong?.history, activeSong?.history?.[activeSong?.history?.length - 1]]);
   const latestGeneratedNotes = getLatestGeneratedNotes();
   const generationOptions = activeSong?.generationOptions;
-  console.log({activeSong});
-  console.log({latestGeneratedNotes});
+
   return {
     project,
     updateProject,

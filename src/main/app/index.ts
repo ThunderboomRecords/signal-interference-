@@ -10,7 +10,7 @@ import fs from 'fs/promises';
 import { MAX_HISTORY_LENGTH, SETTINGS_FILENAME } from "../constants";
 import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setSongChangeCallback, updateSongInProject } from "./project";
 import * as ProjectState from './project';
-import { addNewGeneratedData, findBestTimingOffset, findBestTimingOffsetNearDownbeats, getLatestGeneratedOutput, getLatestRecording } from "../helpers";
+import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording } from "../helpers";
 import StopWatch from "../..//utils/stopwatch";
 
 export { loadProject, createProject, saveProject } from './project';
@@ -189,15 +189,6 @@ export async function generate(amountOfBars?: number) {
   const endTime = Date.now();
   const deltaTime = endTime - cTime;
   console.log(`generation took: ${deltaTime}ms`);
-
-  // check for timing offset here
-  // TODO EVAA to take the generatedoutput and apply the timing offset function here
-  const { bestOffset, bestScore, shiftedSequence } = findBestTimingOffsetNearDownbeats(generatedOutput);
-
-  console.log(`Applied timing offset of ${bestOffset} ticks (score: ${bestScore.toFixed(2)})`);
-
-  generatedOutput = shiftedSequence;
-
   const newSong = addNewGeneratedData(currentSong, generatedOutput);
   await updateSongInProject(newSong);
   sendProjectUpdateToRenderer();
