@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { Project, Song, NoteEvent } from '../../main/types';
+import { Project, Song, NoteEvent, OffsetMode } from '../../main/types';
 import { debounce } from '../../utils/debounce';
 import { create } from 'zustand';
 
@@ -236,6 +236,8 @@ export default function useProject() {
   }, [project, activeSong, activeSong?.history, activeSong?.history?.[activeSong?.history?.length - 1]]);
   const latestGeneratedNotes = getLatestGeneratedNotes();
   const generationOptions = activeSong?.generationOptions;
+  const offsetMode = project.offsetMode ?? "off";
+  const setOffsetMode = (offsetMode: OffsetMode) => {updateProject({ offsetMode });};
   return {
     project,
     updateProject,
@@ -247,5 +249,7 @@ export default function useProject() {
     updateSong,
     latestGeneratedNotes,
     generationOptions,
+    offsetMode,
+    setOffsetMode,
   };
 }

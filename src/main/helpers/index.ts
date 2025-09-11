@@ -1,6 +1,6 @@
 // various project related helpers
-import { CLOCK_PER_BEAT_RESOLUTION, DEFAULT_BEAT_PER_BAR, MAX_HISTORY_LENGTH } from "../constants";
-import { NoteEvent, Song } from "../types";
+import { CLOCK_PER_BEAT_RESOLUTION, DEFAULT_BEAT_PER_BAR, MAX_HISTORY_LENGTH, MAX_OFFSET_RANGE } from "../constants";
+import { NoteEvent, OffsetMode, Song } from "../types";
 
 export function getSongFromId(id: string, songs: Song[]) {
   return songs.filter((song) => song.id === id)?.[0] || undefined;
@@ -45,7 +45,6 @@ export function addNewGeneratedData(song: Song, notes: NoteEvent[]): Song {
 }
 
 /* New improved version of the code */
-const MAX_OFFSET_RANGE = 48;
 
 interface ScoredNote extends NoteEvent {
   absoluteTime: number;
@@ -110,26 +109,38 @@ function filterBestAligneDownbeatNotes (notesWithTime: Array<NoteEvent & { absol
   return Object.values(bestPerDownbeat);
 }
 
-function calculateBestOffsetValue(filteredDownbeatNotes: ScoredNote[], maxOffsetRange: number): {bestOffset: number; bestScore: number; allScores: { offset: number; totalDistance: number }[];} {
+function calculateBestOffsetValue(offsetMode: OffsetMode, filteredDownbeatNotes: ScoredNote[], maxOffsetRange: number, sequence?: Array<NoteEvent & { absoluteTime: number }>, beatsPerBar?: number): {bestOffset: number; bestScore: number; allScores: { offset: number; totalDistance: number }[];} {
   const allScores: { offset: number; totalDistance: number }[] = [];
 
-  for (let offset = -maxOffsetRange; offset <= maxOffsetRange; offset++) {
-    let totalDistance = 0;
-    for (const note of filteredDownbeatNotes) {
-      const distance = Math.abs(note.tickOffset + offset);
-      totalDistance += distance;
+  if (offsetMode === 'mode 1'){
+    for (let offset = -maxOffsetRange; offset <= maxOffsetRange; offset++) {
+      let totalDistance = 0;
+      for (const note of filteredDownbeatNotes) {
+        const distance = Math.abs(note.tickOffset + offset);
+        totalDistance += distance;
+      }
+      allScores.push({ offset, totalDistance });
     }
-    allScores.push({ offset, totalDistance });
   }
-
+  if (offsetMode === 'mode 2') {
+    for (let offset = -maxOffsetRange; offset <= maxOffsetRange; offset++) {
+      const shifted = sequence.map((note) => ({ ...note, absoluteTime: note.absoluteTime + offset, }));
+      const filtered = filterBestAligneDownbeatNotes(
+        shifted,
+        beatsPerBar,
+        maxOffsetRange
+      );
+      let totalDistance = 0;
+      for (const note of filtered) {
+        totalDistance += Math.abs(note.tickOffset);
+      }
+      allScores.push({ offset, totalDistance });
+    }
+  }
   allScores.sort((a, b) => a.totalDistance - b.totalDistance);
   const best = allScores[0] ?? { offset: 0, totalDistance: 0 };
-
-  const bestScore =
-    filteredDownbeatNotes.length > 0
-      ? best.totalDistance / filteredDownbeatNotes.length
-      : 0;
-
+  const bestScore = best.totalDistance / ((offsetMode === "mode 2" && sequence?.length) || filteredDownbeatNotes.length || 1);
+  
   return {
     bestOffset: best.offset,
     bestScore,
@@ -154,20 +165,27 @@ function applyBestOffsetValue (absoluteTimeNotes: Array<NoteEvent & { absoluteTi
   return shiftedNotes;
 }
 
-export function findBestTimingOffsetNearDownbeats(sequence: NoteEvent[], beatsPerBar = DEFAULT_BEAT_PER_BAR, maxOffsetRange = MAX_OFFSET_RANGE): Offset {
+export function findBestTimingOffsetNearDownbeats(sequence: NoteEvent[], beatsPerBar = DEFAULT_BEAT_PER_BAR, maxOffsetRange = MAX_OFFSET_RANGE, offsetMode: OffsetMode): Offset {
   const absoluteTimeNotes = getAbsoluteTimeNotes(sequence);
-  const filteredDownbeatNotes = filterBestAligneDownbeatNotes(absoluteTimeNotes, beatsPerBar, maxOffsetRange);
-  const { bestOffset, bestScore } = calculateBestOffsetValue(filteredDownbeatNotes, maxOffsetRange);
-  const shiftedSequence = applyBestOffsetValue(absoluteTimeNotes, bestOffset);
 
-  return {
-    bestOffset,
-    bestScore,
-    shiftedSequence
+  if (offsetMode === 'mode 1') {
+    const filteredDownbeatNotes = filterBestAligneDownbeatNotes(absoluteTimeNotes, beatsPerBar, maxOffsetRange);
+    const { bestOffset, bestScore } = calculateBestOffsetValue(offsetMode, filteredDownbeatNotes, maxOffsetRange);
+    const shiftedSequence = applyBestOffsetValue(absoluteTimeNotes, bestOffset);
+    return {
+      bestOffset,
+      bestScore,
+      shiftedSequence
+    };
   }
-}
 
-/* 
-  2. Secondly, we can loop over the whole sequence and per loop determine which note is close to the downbeat and calcultate that distance, we should take into account that the filteredDownbeat.length is needed for this.
-  TODO: Also create a variable that is set in the front end for switching between the two moduses. 
-*/
+  if (offsetMode === 'mode 2') {
+    const { bestOffset, bestScore } = calculateBestOffsetValue(offsetMode, [], maxOffsetRange, absoluteTimeNotes, beatsPerBar);
+    const shiftedSequence = applyBestOffsetValue(absoluteTimeNotes, bestOffset);
+    return { 
+      bestOffset, 
+      bestScore, 
+      shiftedSequence 
+    };
+  }  
+}

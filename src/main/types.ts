@@ -55,9 +55,12 @@ export interface Song {
   markovData?: MarkovModelData;
 }
 
+export type OffsetMode = "off" | "mode 1" | "mode 2";
+
 export interface Project {
   songs: Song[];
   lastSavePath?: string;
   activeSongId?: string,
   recordingLength?: number;
+  offsetMode?: OffsetMode;
 }

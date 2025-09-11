@@ -1,10 +1,20 @@
 import { Play, Square, Circle, Zap } from "lucide-react";
 import { Input } from "../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 import './index.css';
 import useMedia from '../hooks/useMedia';
+import useProject from "../hooks/projectHook";
+import { OffsetMode } from "src/main/types";
 
 export default function MediaControls() {
-  const { isRecording,
+  const { 
+    isRecording,
     stopRecording,
     startRecording,
     recordingLength,
@@ -14,6 +24,11 @@ export default function MediaControls() {
     stopPlayback,
     generate,
   } = useMedia();
+
+  const {
+    offsetMode,
+    setOffsetMode,
+  } = useProject();
 
   return (
     <div id="MediaControls">
@@ -59,7 +74,7 @@ export default function MediaControls() {
           generate();
         }}
       ><Zap />GENERATE</button>
-      <Input className="record-length-input"
+      <Input className="record-length-input max-w-[100px]"
         type='number'
         placeholder="Recording Length"
         value={recordingLength}
@@ -70,7 +85,17 @@ export default function MediaControls() {
           }
         }}
       />
-    </div>
+      <Select value={offsetMode} onValueChange={(val: OffsetMode) => setOffsetMode(val)}>
+        <SelectTrigger className="select-offset min-w-[144px]">
+          <SelectValue placeholder="Select Offset" />
+        </SelectTrigger>
+        <SelectContent >
+          <SelectItem value="off">off</SelectItem>
+          <SelectItem value="mode 1">mode 1</SelectItem>
+          <SelectItem value="mode 2">mode 2</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>    
   );
 }
 
