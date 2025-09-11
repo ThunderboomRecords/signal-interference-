@@ -191,11 +191,8 @@ export async function generate(amountOfBars?: number) {
   console.log(`generation took: ${deltaTime}ms`);
 
   // check for timing offset here
-  // TODO EVAA to take the generatedoutput and apply the timing offset function here
   const { bestOffset, bestScore, shiftedSequence } = findBestTimingOffsetNearDownbeats(generatedOutput);
-
-  console.log(`Applied timing offset of ${bestOffset} ticks (score: ${bestScore.toFixed(2)})`);
-
+  console.log(`Applied timing offset of ${bestOffset} ticks (lowest score: ${bestScore})`);
   generatedOutput = shiftedSequence;
 
   const newSong = addNewGeneratedData(currentSong, generatedOutput);

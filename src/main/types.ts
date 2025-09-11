@@ -11,6 +11,7 @@ export interface ApplicationSettings {
   midiInput?: string;
   midiOutput?: string;
 }
+
 export interface MidiInterfaceInfo {
   index: number;
   name: string;
@@ -59,17 +60,4 @@ export interface Project {
   lastSavePath?: string;
   activeSongId?: string,
   recordingLength?: number;
-}
-
-export interface ScoredNote {
-  note: number;
-  deltaTime: number;
-  duration: number;
-  absoluteTime: number;
-  offset: number;
-  distanceToBeat: number;
-  tickOffset: number;
-  score: number;
-  bar?: number;
-  beat?: number;
 }
