@@ -10,10 +10,10 @@ import {
 import './index.css';
 import useMedia from '../hooks/useMedia';
 import useProject from "../hooks/projectHook";
-import { OffsetMode } from "src/main/types";
+import { OffsetMode } from "../../main/types";
 
 export default function MediaControls() {
-  const { 
+  const {
     isRecording,
     stopRecording,
     startRecording,
@@ -95,7 +95,7 @@ export default function MediaControls() {
           <SelectItem value="mode 2">mode 2</SelectItem>
         </SelectContent>
       </Select>
-    </div>    
+    </div>
   );
 }
 

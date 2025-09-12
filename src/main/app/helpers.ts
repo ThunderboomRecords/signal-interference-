@@ -1,4 +1,4 @@
-import { CLOCKS_PER_BEAT, CLOCK_PER_BEAT_RESOLUTION, DEFAULT_BEAT_PER_BAR } from "../constants";
+import { CLOCKS_PER_BEAT, DEFAULT_BEAT_PER_BAR } from "../constants";
 import { NoteEvent } from "../types";
 
 export function getNotesPerBar(notes: NoteEvent[], beatsPerBar: number): number[] {

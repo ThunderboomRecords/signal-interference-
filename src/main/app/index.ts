@@ -11,7 +11,7 @@ import { DEFAULT_BEAT_PER_BAR, MAX_OFFSET_RANGE, MAX_HISTORY_LENGTH, SETTINGS_FI
 import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setSongChangeCallback, updateSongInProject } from "./project";
 import * as ProjectState from './project';
 import { addNewGeneratedData, findBestTimingOffsetNearDownbeats, getLatestGeneratedOutput, getLatestRecording } from "../helpers";
-import StopWatch from "../..//utils/stopwatch";
+import StopWatch from '../../utils/stopwatch';
 
 export { loadProject, createProject, saveProject } from './project';
 
@@ -198,7 +198,7 @@ export async function generate(amountOfBars?: number) {
     console.log(
       `Applied timing offset (${offsetMode}) of ${bestOffset} ticks (lowest score: ${bestScore})`
     );
-    generatedOutput = shiftedSequence;  
+    generatedOutput = shiftedSequence;
   } else {
     console.log("Offset mode OFF — no timing correction applied.");
   }

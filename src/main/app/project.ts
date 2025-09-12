@@ -19,7 +19,6 @@ import { getSongFromId } from '../helpers';
 import { MarkovModelData } from '../markov';
 // eslint-disable-next-line import/no-named-as-default
 import StopWatch from '../../utils/stopwatch';
-import { off } from 'process';
 
 
 export class Song implements SongI {
