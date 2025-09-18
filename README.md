@@ -20,7 +20,7 @@ After this npm needs to install packages which can be done by running: ``npm i``
 The application can be run by using the following command: ``npm run start``
 
 ### How to use the application 
-![alt text](https://gitlab.moeilijkedingen.nl/oct/open-culture-tech/assets/images/screenshot_signal_inference.png "Logo Title Text 1")
+![alt text](./assets/images/screenshot_signal_inference.png "Logo Title Text 1")
 
 
 ### Recommended workflow
