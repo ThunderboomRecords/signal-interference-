@@ -22,22 +22,17 @@ The application can be run by using the following command: ``npm run start``
 ### How to use the application 
 ![alt text](./assets/images/screenshot_signal_inference.png "Logo Title Text 1")
 
-#### Top section
-- Generation controls:
+#### Top section: Generation & MIDI setup 
     - PLAY: Play generated solo
     - STOP: Stop generated solo from playing 
     - RECORD: Record your own solo to be used by the model. 
     - GENERATE: Generate a solo
     - TIMING: Set timing correction in OFF (no timing correction), MODEL 1 (small timing correction), MODEL 2 (bigger timing correction). If you feel that the model is producing a solo's where the timing of the solo's seem a bit off, use this to correct the offset. 
-
-- Midi controls:
     - DAW: 
     - INPUT: This is the name channel that receives incoming MIDI messages from a DAW
     - OUTPUT: This is the name of the channel that sends outgoing MIDI messages to a DAW
 
-#### Middle section
-- Current generated solo in ABC notation: When a solo is generated, it will display on the screen in ABC notation. The notation is not 100% accurate
-- Songs:
+#### Middle section: ABC notation of current generated solo (not 100% accurate) & Songs
     - Song title: Type your song title here
     - Midi input file: Select a .mid file from your computer that contains the MIDI data you want to use; for guidance on preparing the dataset, see the Recommended Workflow section. The Markov order controls how many previous notes the model considers when generating new ones: a higher value (for example, 12) produces solos that are more predictable and structured, while a lower value (such as 2) results in solos that are less predictable and more varied.
     - Generation length: The generation length specifies the number of bars the model will create in the output.
