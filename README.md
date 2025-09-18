@@ -87,7 +87,7 @@ Dragging an envelope up or down changes the value of a CC message. For certain C
 
 Apply the CC messages at every point where you want Signal Inference to generate solos. Once connected, you’ll see the incoming MIDI messages reflected in the interface: the Play, Generate, and Record buttons will turn blue when triggered, and the song selection in Signal Inference will automatically update (highlighted in blue) when another song is played in Ableton.
 
-Check out the example Ableton Live set and the example Signal Inference set to see how the MIDI connections are set up.
+Check out the example Ableton Live set (in /assets/example). You can use this in combination with the example_signal_inferece (also in /assets/example) to see how the MIDI connections are set up.
 
 4. Play with Signal Inference: 
 Once you’ve set up all your MIDI commands in Ableton, most of Signal Inference’s core functionality will be ready to use. From there, you can refine the output by tweaking parameters, experimenting with different training datasets, and applying timing corrections. When you’re happy with the results, save the model for future use.
