@@ -29,8 +29,8 @@ The application can be run by using the following command: ``npm run start``
     - GENERATE: Generate a solo with numbers of bars to generate
     - TIMING: Set timing correction in OFF (no timing correction), MODEL 1 (small timing correction), MODEL 2 (bigger timing correction). If you feel that the model is producing a solo's where the timing of the solo's seem a bit off, use this to correct the offset. 
     - DAW: This port receives MIDI CLOCK & CC messages from Ableton
-    - INPUT: This port receives incoming MIDI messages from a MIDI instrument. Because the naming is different per instrument, we will futher refer to it as: [YOUR MIDI INPUT PORT].
-    - OUTPUT: This port sends outgoing MIDI messages (generated solo) to a DAW or instrument
+    - INPUT: This port receives incoming MIDI messages from a MIDI keyboard/instrument. Because the naming is different per instrument, we will futher refer to it as: [INPUT PORT].
+    - OUTPUT: This port sends outgoing MIDI messages (generated solo) to a DAW or instrument. Also this naming depends on your situation. For now, We will refer to this as [OUTPUT PORT]
 
 #### Middle section: ABC notation of current generated solo (not 100% accurate) & Songs
     - Song title: Type your song title here
@@ -47,7 +47,7 @@ The application can be run by using the following command: ``npm run start``
 
 ### Recommended workflow
 1. Collect MIDI training data
-To generate a solo, the markov model requires a substantial amount of training data to capture your playing style. We recommend recording solos without chords in Ableton Live and exporting them as a single MIDI file. You can also use the example_training_midi file (included in the assets folder and performed by Jeroen Ermens) to get started right away. For best results, provide a MIDI file containing around one hour of solo material for a specific song, though effective results can already be achieved with as little as 15 minutes of MIDI data.
+To generate a solo, the markov model requires a substantial amount of training data to capture your playing style. We recommend recording solos without chords in Ableton Live and exporting them as a single MIDI file. You can also use the trainingsdata midi file (included in the assets folder and performed by Jeroen Ermens) to get started right away. For best results, provide a MIDI file containing around one hour of solo material for a specific song, though effective results can already be achieved with as little as 15 minutes of MIDI data.
 
 2. Install and run the application
 Follow the steps in Requirements, Installation and Running the applicaiton described above.
@@ -56,10 +56,9 @@ Follow the steps in Requirements, Installation and Running the applicaiton descr
 To use Signal Inference in a live setting, you can connect it to your existing Ableton Live set via MIDI. The first step is to ensure that Ableton is properly configured to communicate with Signal Inference over MIDI. Follow these steps:
 
     1. On your Mac navigate to Audio MIDI Setup. Click on your IAC driver, and create 3 ports named: CLOCK, TO_DAW, FROM_DAW. Click on Apply and go back to Ableton Live
-    2. (TODO: Check with Jeroen) In Ableton Live go to Settings > Link, Tempo, Midi and select the following boxes:
-        - Track for Input Ports: [YOUR MIDI INPUT PORT], IAC (TO_DAW), IAC (FROM_DAW), and Output Ports: IAC (FROM_DAW)
-        - Sync for Input Ports: IAC (FROM_DAW) and Output Ports: [YOUR MIDI INPUT PORT], IAC (FROM_DAW)
-        - Remote for Input Ports: IAC (FROM_DAW), and Ouput Ports: [YOUR MIDI INPUT PORT]
+    2. In Ableton Live go to Settings > Link, Tempo, Midi and select the following boxes:
+        - For Midi Inputs, select for your [INPUT PORT]: Track, Sync, Remote, MPE
+        - For Midi Output, select for for TO_DAW: Track, Sync and select for [OUTPUT PORT]: Track
     3. Go into arrangement view and insert a new MIDI track and name it MIDI_TO_SIGNAL_INFERENCE. This MIDI track will be used to send all commands to the application. Instead of "No Ouput", select IAC (FROM DAW) as output channel
     7. In the Clip View of this channel, you can add envelopes (you don't have to add notes!) by clicking on Envelopes. 
     
@@ -81,13 +80,15 @@ Signal Inference uses the following MIDI CC messages to generate solos. This che
     Not required, but can be used if you want to stop the playback before the amount of bars that is played is not finished yet.
 
     CC message: 56 -> Swith song. 
-    Set this CC message at the start of a song. This ensures the track will switch to the right song. This value of this message correspongs to the MIDI Selection message that you set for each song in the Songs tab of the applicaiton. For example: Song "Superfly" has a MIDI selection message of 1, then the MIDI CC control message of this song should be set at the start of the this song and should have a value of 1. 
+    Set this CC message at the start of a song. This ensures the track will switch to the right song. This value of this message correspongs to the MIDI Selection message that you set for each song in the Songs tab of the applicaiton. For example: Song "Greem Unions" has a MIDI selection message of 1, then the MIDI CC control message of this song should be set at the start of the this song and should have a value of 1. 
 
 Dragging an envelope up or down changes the value of a CC message. For certain CC messages, the value itself has a specific meaning (for example, the number of bars to generate or the song being selected). If no specific meaning is indicated, setting the value to 127 (to send the message once) and then returning it to 0 is sufficient. Using this technique, you can create a short “block” signal to trigger the message. 
 
 Apply the CC messages at every point where you want Signal Inference to generate solos. Once connected, you’ll see the incoming MIDI messages reflected in the interface: the Play, Generate, and Record buttons will turn blue when triggered, and the song selection in Signal Inference will automatically update (highlighted in blue) when another song is played in Ableton.
 
-Check out the example Ableton Live set (in /assets/example). You can use this in combination with the example_signal_inferece (also in /assets/example) to see how the MIDI connections are set up.
+Are you working with a Ableton Live set from scratch? We recommend you to make a separate click track with the correct BPM for each song, and backingtrack to give context to the solo's that are being generated. Check out the example how that is done. 
+
+Check out the example Ableton Live set (in /assets/example). You can use this in combination with the c (also in /assets/example) to see how the MIDI connections are set up.
 
 4. Play with Signal Inference: 
 Once you’ve set up all your MIDI commands in Ableton, most of Signal Inference’s core functionality will be ready to use. From there, you can refine the output by tweaking parameters, experimenting with different training datasets, and applying timing corrections. When you’re happy with the results, save the model for future use.
