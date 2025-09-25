@@ -1,7 +1,7 @@
 
 # Signal Interference
 
-Signal interference is an application used to generate solos with AI. The application is controlled from a DAW using MIDI and has a build in sequencer which responds to an ecxternal midi clock. To use the application a song or multiple songs can be created. The song requires training data to work. After this this training data can be used to generate new musical phrases based upon recorded input.
+Signal interference is an application used to generate solos with stochastic models: markov chains. Markov-chain music generation builds a probability table of “what note is most likely to follow what,” based on a training melody. Then it samples from that table to create new sequences in the same style. The application is controlled from a DAW using MIDI and has a build in sequencer which responds to an external midi clock. To use the application a song or multiple songs can be created. The song requires training data to work. After this this training data can be used to generate new musical phrases based upon recorded input.
 
 ## Developmnent
 
@@ -65,16 +65,16 @@ To use Signal Inference in a live setting, you can connect it to your existing A
 Signal Inference uses the following MIDI CC messages to generate solos. This cheat sheet will guide you through integrating them step by step into your Ableton Live set by assigning the CC values to envelopes.
 
     CC message: 32 -> Start recording
-    Set this message at the beginning of any solo you play and record if you want to use it as training data for the AI to generate from. 
+    Set this message at the beginning of any solo you play and record if you want to use it as training data for the markov model to generate from. 
 
     CC message: 33 -> Stop recording
-    Set this message at the end of your solo—or at the start of the AI-generated solo—to stop the recording.
+    Set this message at the end of your solo—or at the start of the markoved chain-generated solo—to stop the recording.
 
     CC message: 40 -> Generate solo
-    Set this message immediately after CC message 33, at the point where you want the AI solo to begin generating. The value of this CC message is the amount of bars that you want to generate. This value is passed on to the application. 
+    Set this message immediately after CC message 33, at the point where you want the generated solo to begin generating. The value of this CC message is the amount of bars that you want to generate. This value is passed on to the application. 
 
     CC message: 48 -> Start playback
-    Set this message immediately after CC messages 33 and 40, at the point where you want the AI solo to begin playback of the generated solo.
+    Set this message immediately after CC messages 33 and 40, at the point where you want the generated solo to begin playback of the generated solo.
 
     CC message: 49 -> Stop playback
     Not required, but can be used if you want to stop the playback before the amount of bars that is played is not finished yet.
