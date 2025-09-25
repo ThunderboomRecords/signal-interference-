@@ -40,7 +40,7 @@ The application can be run by using the following command: ``npm run start``
     - MIDI selection message: This is a CC control message used in Ableton to reference a specific song. For details on integrating MIDI messaging with your DAW, see the Recommended Workflow section.
     - Delete button: Delete the song 
 
-#### Bottom section
+#### Bottom section: Open and Save
     - Open project: Open a Signal Inference Project
     - Save project: Save a Signal Inference Project
     - Save current history of project: This will save the generated solo's 
