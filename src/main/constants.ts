@@ -6,3 +6,4 @@ export const SETTINGS_FILENAME = 'settings.json';
 export const ACTIVE_PROJECT_APP_DATA_FILENAME = 'current_project.json';
 export const DEFAULT_MARKOV_ORDER = 12;
 export const MAX_HISTORY_LENGTH = 10;
+export const MAX_OFFSET_RANGE = 48;

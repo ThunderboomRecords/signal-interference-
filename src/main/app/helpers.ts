@@ -47,4 +47,5 @@ export function splitNotesPerBar(notes: NoteEvent[], startBar: number, endBar?: 
 
   const output = notesPerBar.reduce((total, bar) => total.concat(bar), []);
   return output;
+
 }

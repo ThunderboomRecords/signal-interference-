@@ -7,11 +7,11 @@ import { saveMidiFile } from "../midi/fileIO";
 import * as path from 'path'
 import { app, BrowserWindow, dialog } from "electron";
 import fs from 'fs/promises';
-import { MAX_HISTORY_LENGTH, SETTINGS_FILENAME } from "../constants";
+import { DEFAULT_BEAT_PER_BAR, MAX_OFFSET_RANGE, MAX_HISTORY_LENGTH, SETTINGS_FILENAME } from "../constants";
 import { createProject, getCurrentProject, getCurrentSong, loadProject, saveProject, setSongChangeCallback, updateSongInProject } from "./project";
 import * as ProjectState from './project';
-import { addNewGeneratedData, getLatestGeneratedOutput, getLatestRecording } from "../helpers";
-import StopWatch from "../..//utils/stopwatch";
+import { addNewGeneratedData, findBestTimingOffsetNearDownbeats, getLatestGeneratedOutput, getLatestRecording } from "../helpers";
+import StopWatch from '../../utils/stopwatch';
 
 export { loadProject, createProject, saveProject } from './project';
 
@@ -189,6 +189,20 @@ export async function generate(amountOfBars?: number) {
   const endTime = Date.now();
   const deltaTime = endTime - cTime;
   console.log(`generation took: ${deltaTime}ms`);
+
+  // check for timing offset here
+  const proj = getCurrentProject();
+  const offsetMode = proj.offsetMode;
+  if (offsetMode !== "off") {
+    const { bestOffset, bestScore, shiftedSequence } = findBestTimingOffsetNearDownbeats(generatedOutput, DEFAULT_BEAT_PER_BAR, MAX_OFFSET_RANGE, offsetMode);
+    console.log(
+      `Applied timing offset (${offsetMode}) of ${bestOffset} ticks (lowest score: ${bestScore})`
+    );
+    generatedOutput = shiftedSequence;
+  } else {
+    console.log("Offset mode OFF — no timing correction applied.");
+  }
+
   const newSong = addNewGeneratedData(currentSong, generatedOutput);
   await updateSongInProject(newSong);
   sendProjectUpdateToRenderer();

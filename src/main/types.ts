@@ -11,6 +11,7 @@ export interface ApplicationSettings {
   midiInput?: string;
   midiOutput?: string;
 }
+
 export interface MidiInterfaceInfo {
   index: number;
   name: string;
@@ -25,8 +26,6 @@ export interface GenerationStemData {
   name: string; // original file name
   notes: NoteEvent[];
 }
-
-
 
 export interface NoteHistory {
   notes: NoteEvent[];
@@ -56,9 +55,12 @@ export interface Song {
   markovData?: MarkovModelData;
 }
 
+export type OffsetMode = "off" | "mode 1" | "mode 2";
+
 export interface Project {
   songs: Song[];
   lastSavePath?: string;
   activeSongId?: string,
   recordingLength?: number;
+  offsetMode?: OffsetMode;
 }

@@ -1,5 +1,5 @@
 
-export class StopWatch {
+class StopWatch {
   startTime: number;
   endTime: number;
   constructor() {

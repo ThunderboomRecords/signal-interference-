@@ -1,6 +1,6 @@
 // various project related helpers
-import { MAX_HISTORY_LENGTH } from "../constants";
-import { NoteEvent, Song } from "../types";
+import { CLOCK_PER_BEAT_RESOLUTION, DEFAULT_BEAT_PER_BAR, MAX_HISTORY_LENGTH, MAX_OFFSET_RANGE } from "../constants";
+import { NoteEvent, OffsetMode, Song } from "../types";
 
 export function getSongFromId(id: string, songs: Song[]) {
   return songs.filter((song) => song.id === id)?.[0] || undefined;
@@ -44,3 +44,148 @@ export function addNewGeneratedData(song: Song, notes: NoteEvent[]): Song {
   return song;
 }
 
+/* New improved version of the code */
+
+interface ScoredNote extends NoteEvent {
+  absoluteTime: number;
+  offset: number;
+  distanceToBeat: number;
+  tickOffset: number;
+  score: number;
+  bar?: number;
+  beat?: number;
+}
+
+interface Offset {
+  bestOffset: number;
+  bestScore: number;
+  shiftedSequence: NoteEvent[];
+}
+
+function getAbsoluteTimeNotes(sequence: NoteEvent[]): Array<NoteEvent & { absoluteTime: number }> {
+  let currentTick = 0;
+  return sequence.map((note) => {
+    currentTick += note.deltaTime;
+    return { ...note, absoluteTime: currentTick };
+  });
+}
+
+function filterBestAligneDownbeatNotes (notesWithTime: Array<NoteEvent & { absoluteTime: number }>, beatsPerBar: number, maxOffsetRange: number): ScoredNote[] {
+  const ticksPerBar = beatsPerBar * CLOCK_PER_BEAT_RESOLUTION;
+  const bestPerDownbeat: Record<string, ScoredNote> = {};
+
+  for (const note of notesWithTime) {
+    const bar = Math.floor(note.absoluteTime / ticksPerBar);
+    const tickInBar = note.absoluteTime % ticksPerBar;
+
+    for (let beat = 0; beat < beatsPerBar; beat++) {
+      const downbeatTick = beat * CLOCK_PER_BEAT_RESOLUTION;
+      const tickOffset = tickInBar - downbeatTick;
+
+      if (tickOffset >= -maxOffsetRange && tickOffset <= maxOffsetRange) {
+        const key = `${bar}.${beat}`;
+        const distance = Math.abs(tickOffset);
+
+        if (
+          !bestPerDownbeat[key] ||
+          Math.abs(bestPerDownbeat[key].tickOffset) > distance
+        ) {
+          bestPerDownbeat[key] = {
+            note: note.note,
+            deltaTime: note.deltaTime,
+            absoluteTime: note.absoluteTime,
+            bar,
+            beat,
+            tickOffset,
+            offset: 0, 
+            distanceToBeat: 0, 
+            duration: note.duration ?? 0,
+            score: 0,
+          };
+        }
+      }
+    }
+  }
+  return Object.values(bestPerDownbeat);
+}
+
+function calculateBestOffsetValue(offsetMode: OffsetMode, filteredDownbeatNotes: ScoredNote[], maxOffsetRange: number, sequence?: Array<NoteEvent & { absoluteTime: number }>, beatsPerBar?: number): {bestOffset: number; bestScore: number; allScores: { offset: number; totalDistance: number }[];} {
+  const allScores: { offset: number; totalDistance: number }[] = [];
+
+  if (offsetMode === 'mode 1'){
+    for (let offset = -maxOffsetRange; offset <= maxOffsetRange; offset++) {
+      let totalDistance = 0;
+      for (const note of filteredDownbeatNotes) {
+        const distance = Math.abs(note.tickOffset + offset);
+        totalDistance += distance;
+      }
+      allScores.push({ offset, totalDistance });
+    }
+  }
+  if (offsetMode === 'mode 2') {
+    for (let offset = -maxOffsetRange; offset <= maxOffsetRange; offset++) {
+      const shifted = sequence.map((note) => ({ ...note, absoluteTime: note.absoluteTime + offset, }));
+      const filtered = filterBestAligneDownbeatNotes(
+        shifted,
+        beatsPerBar,
+        maxOffsetRange
+      );
+      let totalDistance = 0;
+      for (const note of filtered) {
+        totalDistance += Math.abs(note.tickOffset);
+      }
+      allScores.push({ offset, totalDistance });
+    }
+  }
+  allScores.sort((a, b) => a.totalDistance - b.totalDistance);
+  const best = allScores[0] ?? { offset: 0, totalDistance: 0 };
+  const bestScore = best.totalDistance / ((offsetMode === "mode 2" && sequence?.length) || filteredDownbeatNotes.length || 1);
+  
+  return {
+    bestOffset: best.offset,
+    bestScore,
+    allScores,
+  };
+}
+
+function applyBestOffsetValue (absoluteTimeNotes: Array<NoteEvent & { absoluteTime: number }>, offset: number): NoteEvent[] {
+  const shiftedNotes: NoteEvent[] = [];
+  let previousTime = 0;
+
+  for (const note of absoluteTimeNotes) {
+    const shiftedTime = note.absoluteTime + offset;
+    const deltaTime = shiftedTime - previousTime;
+    shiftedNotes.push({
+      note: note.note,
+      deltaTime,
+      duration: note.duration,
+    });
+    previousTime = shiftedTime;
+  }
+  return shiftedNotes;
+}
+
+export function findBestTimingOffsetNearDownbeats(sequence: NoteEvent[], beatsPerBar = DEFAULT_BEAT_PER_BAR, maxOffsetRange = MAX_OFFSET_RANGE, offsetMode: OffsetMode): Offset {
+  const absoluteTimeNotes = getAbsoluteTimeNotes(sequence);
+
+  if (offsetMode === 'mode 1') {
+    const filteredDownbeatNotes = filterBestAligneDownbeatNotes(absoluteTimeNotes, beatsPerBar, maxOffsetRange);
+    const { bestOffset, bestScore } = calculateBestOffsetValue(offsetMode, filteredDownbeatNotes, maxOffsetRange);
+    const shiftedSequence = applyBestOffsetValue(absoluteTimeNotes, bestOffset);
+    return {
+      bestOffset,
+      bestScore,
+      shiftedSequence
+    };
+  }
+
+  if (offsetMode === 'mode 2') {
+    const { bestOffset, bestScore } = calculateBestOffsetValue(offsetMode, [], maxOffsetRange, absoluteTimeNotes, beatsPerBar);
+    const shiftedSequence = applyBestOffsetValue(absoluteTimeNotes, bestOffset);
+    return { 
+      bestOffset, 
+      bestScore, 
+      shiftedSequence 
+    };
+  }  
+}

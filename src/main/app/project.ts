@@ -10,6 +10,7 @@ import {
   Song as SongI,
   TrainingData,
   History,
+  OffsetMode,
 } from '../types';
 import * as path from 'path';
 import fs from 'fs/promises';
@@ -58,6 +59,7 @@ export class Project implements ProjectI {
   lastSavePath?: string;
   activeSongId?: string;
   recordingLength?: number;
+  offsetMode?: OffsetMode;
   constructor();
   constructor(project?: Partial<ProjectI | Project>);
   constructor(project?: Partial<ProjectI | Project>) {
@@ -69,6 +71,7 @@ export class Project implements ProjectI {
     this.lastSavePath = project?.lastSavePath || undefined;
     this.activeSongId = project?.activeSongId || undefined;
     this.recordingLength = project?.recordingLength || 12;
+    this.offsetMode = project?.offsetMode || "off";
   }
   findSongIndex(song: Song) {
     return this.songs.findIndex((e) => e.id === song.id);
